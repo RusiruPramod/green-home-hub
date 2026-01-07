@@ -1,5 +1,6 @@
-import { AlertTriangle, Bell, CheckCircle, Info, X } from "lucide-react";
-import { useState } from "react";
+import { AlertTriangle, Bell, CheckCircle, Info, X, Radio } from "lucide-react";
+import { useState, useEffect } from "react";
+import type { SensorData } from "@/hooks/useMQTTSimulation";
 
 interface Alert {
   id: string;
@@ -9,32 +10,116 @@ interface Alert {
   time: string;
 }
 
-const initialAlerts: Alert[] = [
-  {
-    id: "1",
-    type: "warning",
-    title: "High Gas Level Detected",
-    message: "Kitchen gas sensor reading above threshold (420 ppm)",
-    time: "2 min ago",
-  },
-  {
-    id: "2",
-    type: "success",
-    title: "Water Tank Full",
-    message: "Water level reached 95% capacity",
-    time: "15 min ago",
-  },
-  {
-    id: "3",
-    type: "info",
-    title: "Motion Detected",
-    message: "PIR sensor triggered in living room",
-    time: "32 min ago",
-  },
-];
+interface AlertsPanelProps {
+  sensorData: SensorData;
+}
 
-export function AlertsPanel() {
-  const [alerts, setAlerts] = useState(initialAlerts);
+export function AlertsPanel({ sensorData }: AlertsPanelProps) {
+  const [alerts, setAlerts] = useState<Alert[]>([
+    {
+      id: "initial-1",
+      type: "info",
+      title: "System Started",
+      message: "MQTT simulation initialized successfully",
+      time: "Just now",
+    },
+  ]);
+
+  // Generate alerts based on sensor data
+  useEffect(() => {
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    // High gas alert
+    if (sensorData.gas > 420) {
+      const gasAlertId = `gas-${Date.now()}`;
+      setAlerts((prev) => {
+        const hasRecentGasAlert = prev.some(a => a.title.includes("Gas") && a.type === "warning");
+        if (hasRecentGasAlert) return prev;
+        return [
+          {
+            id: gasAlertId,
+            type: "warning",
+            title: "High Gas Level Detected",
+            message: `Kitchen gas sensor reading above threshold (${Math.round(sensorData.gas)} ppm)`,
+            time: now,
+          },
+          ...prev.slice(0, 4),
+        ];
+      });
+    }
+
+    // Low water alert
+    if (sensorData.waterLevel < 25) {
+      const waterAlertId = `water-${Date.now()}`;
+      setAlerts((prev) => {
+        const hasRecentWaterAlert = prev.some(a => a.title.includes("Water") && a.type === "danger");
+        if (hasRecentWaterAlert) return prev;
+        return [
+          {
+            id: waterAlertId,
+            type: "danger",
+            title: "Low Water Level",
+            message: `Water tank at ${sensorData.waterLevel.toFixed(0)}% - consider refilling`,
+            time: now,
+          },
+          ...prev.slice(0, 4),
+        ];
+      });
+    }
+
+    // Water tank full
+    if (sensorData.waterLevel > 95) {
+      const fullAlertId = `full-${Date.now()}`;
+      setAlerts((prev) => {
+        const hasRecentFullAlert = prev.some(a => a.title.includes("Full"));
+        if (hasRecentFullAlert) return prev;
+        return [
+          {
+            id: fullAlertId,
+            type: "success",
+            title: "Water Tank Full",
+            message: `Water level reached ${sensorData.waterLevel.toFixed(0)}% capacity`,
+            time: now,
+          },
+          ...prev.slice(0, 4),
+        ];
+      });
+    }
+
+    // PIR motion detected
+    if (sensorData.pir) {
+      const pirAlertId = `pir-${Date.now()}`;
+      setAlerts((prev) => [
+        {
+          id: pirAlertId,
+          type: "info",
+          title: "Motion Detected",
+          message: "PIR sensor triggered in living room",
+          time: now,
+        },
+        ...prev.slice(0, 4),
+      ]);
+    }
+
+    // High power consumption
+    if (sensorData.power > 500) {
+      const powerAlertId = `power-${Date.now()}`;
+      setAlerts((prev) => {
+        const hasRecentPowerAlert = prev.some(a => a.title.includes("Power") && a.type === "warning");
+        if (hasRecentPowerAlert) return prev;
+        return [
+          {
+            id: powerAlertId,
+            type: "warning",
+            title: "High Power Consumption",
+            message: `Current power usage: ${sensorData.power}W`,
+            time: now,
+          },
+          ...prev.slice(0, 4),
+        ];
+      });
+    }
+  }, [sensorData]);
 
   const dismissAlert = (id: string) => {
     setAlerts(alerts.filter((alert) => alert.id !== id));
@@ -82,13 +167,16 @@ export function AlertsPanel() {
   return (
     <div className="sensor-card">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-semibold text-card-foreground">Recent Alerts</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-card-foreground">Live Alerts</h3>
+          <Radio className="h-3 w-3 text-success animate-pulse" />
+        </div>
         <span className="alert-badge alert-badge-warning">
           {alerts.length} Active
         </span>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[300px] overflow-y-auto">
         {alerts.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No active alerts
@@ -97,7 +185,7 @@ export function AlertsPanel() {
           alerts.map((alert) => (
             <div
               key={alert.id}
-              className={`flex items-start gap-3 rounded-lg border p-3 transition-all hover:shadow-sm ${getAlertStyles(alert.type)}`}
+              className={`flex items-start gap-3 rounded-lg border p-3 transition-all hover:shadow-sm animate-fade-in ${getAlertStyles(alert.type)}`}
             >
               <div className={`mt-0.5 ${getIconStyles(alert.type)}`}>
                 {getAlertIcon(alert.type)}

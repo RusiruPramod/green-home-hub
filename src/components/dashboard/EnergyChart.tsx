@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -7,29 +8,56 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { SensorData } from "@/hooks/useMQTTSimulation";
 
-const data = [
-  { time: "00:00", power: 120, voltage: 228 },
-  { time: "02:00", power: 85, voltage: 230 },
-  { time: "04:00", power: 65, voltage: 232 },
-  { time: "06:00", power: 180, voltage: 229 },
-  { time: "08:00", power: 320, voltage: 227 },
-  { time: "10:00", power: 450, voltage: 225 },
-  { time: "12:00", power: 520, voltage: 224 },
-  { time: "14:00", power: 480, voltage: 226 },
-  { time: "16:00", power: 390, voltage: 228 },
-  { time: "18:00", power: 560, voltage: 227 },
-  { time: "20:00", power: 420, voltage: 229 },
-  { time: "22:00", power: 280, voltage: 231 },
-];
+interface ChartDataPoint {
+  time: string;
+  power: number;
+  voltage: number;
+}
 
-export function EnergyChart() {
+interface EnergyChartProps {
+  sensorData: SensorData;
+}
+
+const generateInitialData = (): ChartDataPoint[] => {
+  const data: ChartDataPoint[] = [];
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const time = new Date(now.getTime() - i * 10000);
+    data.push({
+      time: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      power: Math.floor(Math.random() * 200 + 250),
+      voltage: Math.floor(Math.random() * 10 + 225),
+    });
+  }
+  return data;
+};
+
+export function EnergyChart({ sensorData }: EnergyChartProps) {
+  const [chartData, setChartData] = useState<ChartDataPoint[]>(generateInitialData);
+
+  // Update chart with new sensor data
+  useEffect(() => {
+    const now = new Date();
+    const newPoint: ChartDataPoint = {
+      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      power: sensorData.power,
+      voltage: Math.round(sensorData.voltage),
+    };
+
+    setChartData((prev) => {
+      const updated = [...prev.slice(1), newPoint];
+      return updated;
+    });
+  }, [sensorData.power, sensorData.voltage]);
+
   return (
     <div className="sensor-card col-span-full lg:col-span-2">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-card-foreground">Energy Consumption</h3>
-          <p className="text-sm text-muted-foreground">Power usage over 24 hours</p>
+          <h3 className="font-semibold text-card-foreground">Live Energy Consumption</h3>
+          <p className="text-sm text-muted-foreground">Real-time power & voltage data</p>
         </div>
         <div className="flex gap-4">
           <div className="flex items-center gap-2">
@@ -45,7 +73,7 @@ export function EnergyChart() {
       
       <div className="h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="powerGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--chart-primary))" stopOpacity={0.3} />
@@ -62,6 +90,7 @@ export function EnergyChart() {
               axisLine={false}
               tickLine={false}
               className="text-xs fill-muted-foreground"
+              interval="preserveStartEnd"
             />
             <YAxis 
               axisLine={false}
@@ -83,6 +112,7 @@ export function EnergyChart() {
               stroke="hsl(var(--chart-primary))"
               strokeWidth={2}
               fill="url(#powerGradient)"
+              isAnimationActive={false}
             />
             <Area
               type="monotone"
@@ -90,6 +120,7 @@ export function EnergyChart() {
               stroke="hsl(var(--chart-secondary))"
               strokeWidth={2}
               fill="url(#voltageGradient)"
+              isAnimationActive={false}
             />
           </AreaChart>
         </ResponsiveContainer>
