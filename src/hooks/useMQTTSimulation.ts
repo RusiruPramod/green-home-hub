@@ -26,19 +26,6 @@ interface MQTTSimulationReturn {
   toggleDevice: (device: keyof DeviceStates) => void;
 }
 
-// Random values pool for sensor readings
-const VOLTAGE_VALUES = [34, 228.540, 245, 250, 210, 215];
-const CURRENT_VALUES = [34, 34, 78, 3.5, 4.2, 5.0, 0.5, 0.8];
-const POWER_VALUES = [34, 34, 78, 4,  850, 1000, 1200, 1500];
-const GAS_VALUES = [550, 600, 200];
-const WATER_LEVEL_VALUES = [34, 34, 78, 4, 785, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
-const FLOW_RATE_VALUES = [34, 34, 78, 4, 785, 8, 10, 12, 14, 16, 18, 20, 22, 25, 5, 15];
-
-// Get random value from specific pool
-const getRandomValue = (pool: number[]) => {
-  return pool[Math.floor(Math.random() * pool.length)];
-};
-
 // Simulate realistic sensor value fluctuations
 const fluctuate = (base: number, variance: number, min?: number, max?: number) => {
   const change = (Math.random() - 0.5) * variance * 2;
@@ -90,7 +77,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     const updateInterval = setInterval(() => {
       setSensorData((prev) => {
         // Calculate power based on voltage and current
-        const newVoltage = fluctuate(prev.voltage, 2, 420, 240);
+        const newVoltage = fluctuate(prev.voltage, 2, 220, 200);
         const newCurrent = fluctuate(prev.current, 0.2, 0.5, 5);
         const newPower = Number((newVoltage * newCurrent).toFixed(0));
         
