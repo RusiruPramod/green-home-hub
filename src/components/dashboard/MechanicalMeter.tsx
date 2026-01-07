@@ -132,8 +132,15 @@ export function MechanicalMeter({
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <svg width={width} height={height} className="overflow-visible" style={{ isolation: 'isolate' }}>
+    <div className="flex flex-col items-center w-full min-w-[120px]">
+      <svg 
+        width={width} 
+        height={height} 
+        className="overflow-visible mx-auto" 
+        style={{ isolation: 'isolate', maxWidth: '100%' }}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+      >
         <defs>
           <clipPath id={`meter-clip-${label.replace(/\s/g, '-')}`}>
             <rect x="0" y="0" width={width} height={height} />
@@ -226,13 +233,15 @@ export function MechanicalMeter({
       </svg>
       
       {/* Value display */}
-      <div className="mt-1 text-center">
-        <span className={`${valueSize} font-bold font-mono text-foreground`}>
-          {animatedValue.toFixed(1)}
-        </span>
-        <span className={`${fontSize} text-muted-foreground ml-1`}>{unit}</span>
+      <div className="mt-2 text-center w-full px-1">
+        <div className="flex items-baseline justify-center flex-wrap gap-1">
+          <span className={`${valueSize} font-bold font-mono text-foreground whitespace-nowrap`}>
+            {animatedValue.toFixed(1)}
+          </span>
+          <span className={`${fontSize} text-muted-foreground whitespace-nowrap`}>{unit}</span>
+        </div>
       </div>
-      <p className={`${fontSize} text-muted-foreground mt-0.5`}>{label}</p>
+      <p className={`${fontSize} text-muted-foreground mt-1 text-center w-full px-1 break-words`}>{label}</p>
     </div>
   );
 }

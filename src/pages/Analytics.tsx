@@ -94,58 +94,68 @@ const Analytics = () => {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-3 sm:gap-6 md:gap-8">
-                <MechanicalMeter
-                  value={sensorData.voltage}
-                  min={200}
-                  max={260}
-                  label="Voltage"
-                  unit="V"
-                  warningThreshold={235}
-                  dangerThreshold={245}
-                  size="sm"
-                />
-                <MechanicalMeter
-                  value={sensorData.current}
-                  min={0}
-                  max={10}
-                  label="Current"
-                  unit="A"
-                  warningThreshold={7}
-                  dangerThreshold={9}
-                  size="sm"
-                />
-                <MechanicalMeter
-                  value={sensorData.power}
-                  min={0}
-                  max={2000}
-                  label="Power"
-                  unit="W"
-                  warningThreshold={1500}
-                  dangerThreshold={1800}
-                  size="sm"
-                />
-                <MechanicalMeter
-                  value={sensorData.gas}
-                  min={0}
-                  max={1000}
-                  label="Gas"
-                  unit="ppm"
-                  warningThreshold={400}
-                  dangerThreshold={600}
-                  size="sm"
-                />
-                <MechanicalMeter
-                  value={sensorData.waterLevel}
-                  min={0}
-                  max={100}
-                  label="Water"
-                  unit="%"
-                  warningThreshold={20}
-                  dangerThreshold={10}
-                  size="sm"
-                />
+            <CardContent className="px-2 sm:px-4 md:px-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 md:gap-8 lg:gap-6 justify-items-center">
+                <div className="w-full max-w-[160px] flex justify-center">
+                  <MechanicalMeter
+                    value={sensorData.voltage}
+                    min={200}
+                    max={260}
+                    label="Voltage"
+                    unit="V"
+                    warningThreshold={235}
+                    dangerThreshold={245}
+                    size="sm"
+                  />
+                </div>
+                <div className="w-full max-w-[160px] flex justify-center">
+                  <MechanicalMeter
+                    value={sensorData.current}
+                    min={0}
+                    max={10}
+                    label="Current"
+                    unit="A"
+                    warningThreshold={7}
+                    dangerThreshold={9}
+                    size="sm"
+                  />
+                </div>
+                <div className="w-full max-w-[160px] flex justify-center">
+                  <MechanicalMeter
+                    value={sensorData.power}
+                    min={0}
+                    max={2000}
+                    label="Power"
+                    unit="W"
+                    warningThreshold={1500}
+                    dangerThreshold={1800}
+                    size="sm"
+                  />
+                </div>
+                <div className="w-full max-w-[160px] flex justify-center">
+                  <MechanicalMeter
+                    value={sensorData.gas}
+                    min={0}
+                    max={1000}
+                    label="Gas"
+                    unit="ppm"
+                    warningThreshold={400}
+                    dangerThreshold={600}
+                    size="sm"
+                  />
+                </div>
+                <div className="w-full max-w-[160px] flex justify-center">
+                  <MechanicalMeter
+                    value={sensorData.waterLevel}
+                    min={0}
+                    max={100}
+                    label="Water"
+                    unit="%"
+                    warningThreshold={20}
+                    dangerThreshold={10}
+                    size="sm"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
