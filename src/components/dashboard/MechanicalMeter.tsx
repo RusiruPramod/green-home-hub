@@ -106,7 +106,11 @@ export function MechanicalMeter({
     const endX = centerX + Math.cos(endRad) * arcRadius;
     const endY = centerY + Math.sin(endRad) * arcRadius;
     
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    const angleDiff = endAngle - startAngle;
+    const largeArc = angleDiff > 180 ? 1 : 0;
+    
+    // Only render if the arc is visible
+    if (angleDiff <= 0) return null;
     
     return (
       <path
@@ -116,6 +120,7 @@ export function MechanicalMeter({
         strokeWidth={4}
         strokeLinecap="round"
         opacity={0.3}
+        style={{ pointerEvents: 'none' }}
       />
     );
   };
@@ -128,7 +133,13 @@ export function MechanicalMeter({
 
   return (
     <div className="flex flex-col items-center">
-      <svg width={width} height={height} className="overflow-visible">
+      <svg width={width} height={height} className="overflow-visible" style={{ isolation: 'isolate' }}>
+        <defs>
+          <clipPath id={`meter-clip-${label.replace(/\s/g, '-')}`}>
+            <rect x="0" y="0" width={width} height={height} />
+          </clipPath>
+        </defs>
+        
         {/* Background arc */}
         <path
           d={`M ${centerX + Math.cos(-135 * Math.PI / 180) * radius} ${centerY + Math.sin(-135 * Math.PI / 180) * radius} 
@@ -144,15 +155,28 @@ export function MechanicalMeter({
         {dangerThreshold && createArc(getZoneAngle(dangerThreshold), 135, "hsl(var(--destructive))")}
         
         {/* Progress arc */}
-        <path
-          d={`M ${centerX + Math.cos(-135 * Math.PI / 180) * radius} ${centerY + Math.sin(-135 * Math.PI / 180) * radius} 
-              A ${radius} ${radius} 0 ${rotation > 0 ? 1 : 0} 1 ${centerX + Math.cos(rotation * Math.PI / 180) * radius} ${centerY + Math.sin(rotation * Math.PI / 180) * radius}`}
-          fill="none"
-          stroke={getNeedleColor()}
-          strokeWidth={8}
-          strokeLinecap="round"
-          className="transition-all duration-100"
-        />
+        {(() => {
+          const startAngle = -135;
+          const endAngle = Math.max(-135, Math.min(135, rotation));
+          const startRad = startAngle * (Math.PI / 180);
+          const endRad = endAngle * (Math.PI / 180);
+          const startX = centerX + Math.cos(startRad) * radius;
+          const startY = centerY + Math.sin(startRad) * radius;
+          const endX = centerX + Math.cos(endRad) * radius;
+          const endY = centerY + Math.sin(endRad) * radius;
+          const largeArc = (endAngle - startAngle) > 180 ? 1 : 0;
+          
+          return (
+            <path
+              d={`M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY}`}
+              fill="none"
+              stroke={getNeedleColor()}
+              strokeWidth={8}
+              strokeLinecap="round"
+              className="transition-all duration-100"
+            />
+          );
+        })()}
         
         {/* Tick marks */}
         {ticks}
