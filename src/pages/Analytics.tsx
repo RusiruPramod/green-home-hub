@@ -1,7 +1,9 @@
-import { BarChart3, TrendingUp, TrendingDown, Calendar, Download, Zap, Droplets, Flame } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Calendar, Download, Zap, Droplets, Flame, Gauge } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { MechanicalMeter } from "@/components/dashboard/MechanicalMeter";
+import { useMQTTSimulation } from "@/hooks/useMQTTSimulation";
 import { 
   AreaChart, 
   Area, 
@@ -18,6 +20,7 @@ import {
 } from "recharts";
 
 const Analytics = () => {
+  const { sensorData, connectionStatus } = useMQTTSimulation();
   const weeklyData = [
     { day: "Mon", energy: 24.5, water: 145, cost: 280 },
     { day: "Tue", energy: 28.2, water: 162, cost: 320 },
@@ -72,6 +75,77 @@ const Analytics = () => {
         </header>
 
         <div className="space-y-6 p-6">
+          {/* Live Mechanical Meters */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Gauge className="h-5 w-5 text-primary" />
+                Live Sensor Readings
+                <span className={`ml-auto text-xs px-2 py-1 rounded-full ${
+                  connectionStatus === "connected" 
+                    ? "bg-success/10 text-success" 
+                    : "bg-muted text-muted-foreground"
+                }`}>
+                  {connectionStatus === "connected" ? "● Live" : "Connecting..."}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+                <MechanicalMeter
+                  value={sensorData.voltage}
+                  min={200}
+                  max={260}
+                  label="Voltage"
+                  unit="V"
+                  warningThreshold={235}
+                  dangerThreshold={245}
+                  size="md"
+                />
+                <MechanicalMeter
+                  value={sensorData.current}
+                  min={0}
+                  max={10}
+                  label="Current"
+                  unit="A"
+                  warningThreshold={7}
+                  dangerThreshold={9}
+                  size="md"
+                />
+                <MechanicalMeter
+                  value={sensorData.power}
+                  min={0}
+                  max={2000}
+                  label="Power"
+                  unit="W"
+                  warningThreshold={1500}
+                  dangerThreshold={1800}
+                  size="md"
+                />
+                <MechanicalMeter
+                  value={sensorData.gas}
+                  min={0}
+                  max={1000}
+                  label="Gas Level"
+                  unit="ppm"
+                  warningThreshold={400}
+                  dangerThreshold={600}
+                  size="md"
+                />
+                <MechanicalMeter
+                  value={sensorData.waterLevel}
+                  min={0}
+                  max={100}
+                  label="Water Tank"
+                  unit="%"
+                  warningThreshold={20}
+                  dangerThreshold={10}
+                  size="md"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Insights */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {insights.map((insight, index) => (
