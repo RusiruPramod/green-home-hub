@@ -1,5 +1,6 @@
 import { Flame, AlertTriangle, Shield, Eye, Power, History } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigger";
 import { useMQTTSimulation } from "@/hooks/useMQTTSimulation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,10 @@ const Gas = () => {
   const status = getGasStatus();
 
   const motionLogs = [
-    { time: "2 min ago", location: "Living Room", type: "Motion Detected" },
-    { time: "15 min ago", location: "Kitchen", type: "Motion Detected" },
-    { time: "1 hour ago", location: "Main Door", type: "Entry Detected" },
-    { time: "2 hours ago", location: "Backyard", type: "Motion Detected" },
+    { time: "2 min ago", location: "Living Room", type: "Motion" },
+    { time: "15 min ago", location: "Kitchen", type: "Motion" },
+    { time: "1 hour ago", location: "Main Door", type: "Entry" },
+    { time: "2 hours ago", location: "Backyard", type: "Motion" },
   ];
 
   return (
@@ -32,49 +33,52 @@ const Gas = () => {
       <DashboardSidebar />
       
       <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur-lg">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Gas & Safety</h1>
-            <p className="text-sm text-muted-foreground">Gas detection & security monitoring</p>
+        <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 backdrop-blur-lg">
+          <div className="flex items-center gap-2">
+            <MobileSidebarTrigger />
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-foreground">Gas & Safety</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Detection & security</p>
+            </div>
           </div>
           {isDangerGas && (
-            <Button variant="destructive" className="animate-pulse">
-              <Power className="mr-2 h-4 w-4" />
-              Emergency Gas OFF
+            <Button variant="destructive" size="sm" className="animate-pulse">
+              <Power className="mr-1 sm:mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Emergency</span> OFF
             </Button>
           )}
         </header>
 
-        <div className="space-y-6 p-6">
+        <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
           {/* Gas Level Card */}
           <Card className={`${status.bg} border-2 ${isDangerGas ? "border-destructive" : isHighGas ? "border-warning" : "border-success"}`}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`flex h-16 w-16 items-center justify-center rounded-full ${isDangerGas ? "bg-destructive" : isHighGas ? "bg-warning" : "bg-success"}`}>
-                    <Flame className="h-8 w-8 text-white" />
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className={`flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full ${isDangerGas ? "bg-destructive" : isHighGas ? "bg-warning" : "bg-success"}`}>
+                    <Flame className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Gas Sensor Reading</p>
-                    <p className="text-4xl font-bold font-mono text-foreground">{gasLevel} <span className="text-lg">ppm</span></p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Gas Sensor</p>
+                    <p className="text-2xl sm:text-4xl font-bold font-mono text-foreground">{gasLevel} <span className="text-sm sm:text-lg">ppm</span></p>
                   </div>
                 </div>
-                <div className={`rounded-full px-6 py-2 ${isDangerGas ? "bg-destructive" : isHighGas ? "bg-warning" : "bg-success"}`}>
-                  <span className="text-lg font-bold text-white">{status.label}</span>
+                <div className={`rounded-full px-4 sm:px-6 py-1.5 sm:py-2 self-start sm:self-auto ${isDangerGas ? "bg-destructive" : isHighGas ? "bg-warning" : "bg-success"}`}>
+                  <span className="text-sm sm:text-lg font-bold text-white">{status.label}</span>
                 </div>
               </div>
               
               {/* Gas Level Bar */}
-              <div className="mt-6">
-                <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                  <span>0 ppm</span>
-                  <span>Safe (&lt;400)</span>
-                  <span>Warning (&lt;500)</span>
-                  <span>Danger (&gt;500)</span>
+              <div className="mt-4 sm:mt-6">
+                <div className="flex justify-between text-[10px] sm:text-xs text-muted-foreground mb-2">
+                  <span>0</span>
+                  <span>Safe</span>
+                  <span>Warning</span>
+                  <span>Danger</span>
                 </div>
-                <div className="h-4 rounded-full bg-muted overflow-hidden">
+                <div className="h-3 sm:h-4 rounded-full bg-muted overflow-hidden">
                   <div 
-                    className={`h-4 transition-all ${isDangerGas ? "bg-destructive" : isHighGas ? "bg-warning" : "bg-success"}`}
+                    className={`h-3 sm:h-4 transition-all ${isDangerGas ? "bg-destructive" : isHighGas ? "bg-warning" : "bg-success"}`}
                     style={{ width: `${Math.min((gasLevel / 600) * 100, 100)}%` }}
                   />
                 </div>
@@ -83,21 +87,21 @@ const Gas = () => {
           </Card>
 
           {/* Safety Controls */}
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Shield className="h-5 w-5 text-primary" />
+              <CardHeader className="pb-2 sm:pb-4">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   Safety Controls
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between rounded-lg border border-border p-4">
-                  <div className="flex items-center gap-3">
-                    <Flame className="h-5 w-5 text-muted-foreground" />
+              <CardContent className="space-y-3 sm:space-y-4">
+                <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:p-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium text-foreground">Exhaust Fan</p>
-                      <p className="text-sm text-muted-foreground">Auto-activates on high gas</p>
+                      <p className="text-sm font-medium text-foreground">Exhaust Fan</p>
+                      <p className="text-xs text-muted-foreground hidden sm:block">Auto on high gas</p>
                     </div>
                   </div>
                   <Switch
@@ -106,12 +110,12 @@ const Gas = () => {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between rounded-lg border border-border p-4">
-                  <div className="flex items-center gap-3">
-                    <Eye className="h-5 w-5 text-muted-foreground" />
+                <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:p-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium text-foreground">Motion Detection</p>
-                      <p className="text-sm text-muted-foreground">PIR sensor active</p>
+                      <p className="text-sm font-medium text-foreground">Motion Detection</p>
+                      <p className="text-xs text-muted-foreground hidden sm:block">PIR sensor active</p>
                     </div>
                   </div>
                   <Switch
@@ -120,12 +124,12 @@ const Gas = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-border p-4">
-                  <div className="flex items-center gap-3">
-                    <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+                <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:p-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium text-foreground">Gas Leak Alert</p>
-                      <p className="text-sm text-muted-foreground">SMS & Push notifications</p>
+                      <p className="text-sm font-medium text-foreground">Gas Leak Alert</p>
+                      <p className="text-xs text-muted-foreground hidden sm:block">SMS & Push</p>
                     </div>
                   </div>
                   <Switch defaultChecked />
@@ -134,27 +138,27 @@ const Gas = () => {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <History className="h-5 w-5 text-primary" />
+              <CardHeader className="pb-2 sm:pb-4">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                  <History className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   Motion Log
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {motionLogs.map((log, index) => (
                     <div 
                       key={index}
-                      className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
+                      className="flex items-center justify-between rounded-lg bg-muted/50 p-2 sm:p-3"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div className="h-2 w-2 rounded-full bg-primary" />
                         <div>
-                          <p className="text-sm font-medium text-foreground">{log.location}</p>
-                          <p className="text-xs text-muted-foreground">{log.type}</p>
+                          <p className="text-xs sm:text-sm font-medium text-foreground">{log.location}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">{log.type}</p>
                         </div>
                       </div>
-                      <span className="text-xs text-muted-foreground">{log.time}</span>
+                      <span className="text-[10px] sm:text-xs text-muted-foreground">{log.time}</span>
                     </div>
                   ))}
                 </div>
@@ -164,20 +168,20 @@ const Gas = () => {
 
           {/* PIR Status */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">PIR Motion Sensor Status</CardTitle>
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-sm sm:text-base">PIR Motion Sensor</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-6">
-                <div className={`flex h-20 w-20 items-center justify-center rounded-full ${sensorData.pir ? "bg-primary animate-pulse" : "bg-muted"}`}>
-                  <Eye className={`h-10 w-10 ${sensorData.pir ? "text-primary-foreground" : "text-muted-foreground"}`} />
+              <div className="flex items-center gap-4 sm:gap-6">
+                <div className={`flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-full ${sensorData.pir ? "bg-primary animate-pulse" : "bg-muted"}`}>
+                  <Eye className={`h-7 w-7 sm:h-10 sm:w-10 ${sensorData.pir ? "text-primary-foreground" : "text-muted-foreground"}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">
+                  <p className="text-lg sm:text-2xl font-bold text-foreground">
                     {sensorData.pir ? "Motion Detected!" : "No Motion"}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {sensorData.pir ? "Movement detected in monitored area" : "All areas clear"}
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    {sensorData.pir ? "Movement in area" : "All clear"}
                   </p>
                 </div>
               </div>
