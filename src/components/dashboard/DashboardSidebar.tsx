@@ -59,7 +59,7 @@ export function DashboardSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
+      <nav className="flex-1 space-y-1 p-3">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
