@@ -1,5 +1,6 @@
 import { Settings, User, Bell, Wifi, Moon, Sun, Shield, Database, LogOut } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigger";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -23,34 +24,37 @@ const SettingsPage = () => {
       <DashboardSidebar />
       
       <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur-lg">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Settings</h1>
-            <p className="text-sm text-muted-foreground">Configure your IoT dashboard</p>
+        <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 backdrop-blur-lg">
+          <div className="flex items-center gap-2">
+            <MobileSidebarTrigger />
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-foreground">Settings</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Configure dashboard</p>
+            </div>
           </div>
         </header>
 
-        <div className="max-w-4xl space-y-6 p-6">
+        <div className="max-w-4xl space-y-4 sm:space-y-6 p-3 sm:p-6">
           {/* Profile */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <User className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Profile
               </CardTitle>
-              <CardDescription>Manage your account settings</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Account settings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary text-xl sm:text-2xl font-bold text-primary-foreground shrink-0">
                   JD
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="font-medium text-foreground">John Doe</p>
-                  <p className="text-sm text-muted-foreground">john.doe@example.com</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">john.doe@example.com</p>
                 </div>
-                <Button variant="outline" size="sm" className="ml-auto">
-                  Edit Profile
+                <Button variant="outline" size="sm" className="self-start sm:self-auto">
+                  Edit
                 </Button>
               </div>
             </CardContent>
@@ -58,18 +62,18 @@ const SettingsPage = () => {
 
           {/* Appearance */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                {isDark ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                {isDark ? <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> : <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
                 Appearance
               </CardTitle>
-              <CardDescription>Customize the dashboard look</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Theme settings</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-foreground">Dark Mode</p>
-                  <p className="text-sm text-muted-foreground">Toggle dark/light theme</p>
+                  <p className="text-sm font-medium text-foreground">Dark Mode</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Toggle theme</p>
                 </div>
                 <Switch checked={isDark} onCheckedChange={setIsDark} />
               </div>
@@ -78,70 +82,56 @@ const SettingsPage = () => {
 
           {/* Notifications */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Bell className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Notifications
               </CardTitle>
-              <CardDescription>Configure alert preferences</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Alert preferences</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-foreground">Push Notifications</p>
-                  <p className="text-sm text-muted-foreground">Receive browser notifications</p>
+            <CardContent className="space-y-3 sm:space-y-4">
+              {[
+                { title: "Push Notifications", desc: "Browser alerts" },
+                { title: "Email Alerts", desc: "Critical via email", defaultChecked: true },
+                { title: "SMS Alerts", desc: "Emergency SMS" },
+                { title: "Sound Alerts", desc: "Play sound", defaultChecked: true },
+              ].map((item) => (
+                <div key={item.title} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  </div>
+                  <Switch defaultChecked={item.defaultChecked} />
                 </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-foreground">Email Alerts</p>
-                  <p className="text-sm text-muted-foreground">Get critical alerts via email</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-foreground">SMS Alerts</p>
-                  <p className="text-sm text-muted-foreground">Emergency alerts via SMS</p>
-                </div>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-foreground">Sound Alerts</p>
-                  <p className="text-sm text-muted-foreground">Play sound on critical alerts</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
+              ))}
             </CardContent>
           </Card>
 
           {/* Connection */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wifi className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <Wifi className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Connection
               </CardTitle>
-              <CardDescription>MQTT & API settings</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">MQTT & API</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>MQTT Broker URL</Label>
-                  <Input defaultValue="mqtt://192.168.1.100:1883" />
+                  <Label className="text-xs sm:text-sm">MQTT Broker</Label>
+                  <Input defaultValue="mqtt://192.168.1.100:1883" className="text-xs sm:text-sm" />
                 </div>
                 <div className="space-y-2">
-                  <Label>API Endpoint</Label>
-                  <Input defaultValue="http://localhost:3001/api" />
+                  <Label className="text-xs sm:text-sm">API Endpoint</Label>
+                  <Input defaultValue="http://localhost:3001/api" className="text-xs sm:text-sm" />
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-success/10 p-4">
-                <div className="h-3 w-3 rounded-full bg-success animate-pulse" />
+              <div className="flex items-center gap-3 rounded-lg bg-success/10 p-3 sm:p-4">
+                <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-success animate-pulse" />
                 <div>
-                  <p className="font-medium text-success">Connected</p>
-                  <p className="text-sm text-muted-foreground">ESP32 device online - 192.168.1.45</p>
+                  <p className="text-sm font-medium text-success">Connected</p>
+                  <p className="text-xs text-muted-foreground">ESP32 @ 192.168.1.45</p>
                 </div>
               </div>
             </CardContent>
@@ -149,53 +139,53 @@ const SettingsPage = () => {
 
           {/* Security */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Shield className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Security
               </CardTitle>
-              <CardDescription>Account security settings</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Account security</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-foreground">Two-Factor Authentication</p>
-                  <p className="text-sm text-muted-foreground">Add extra security to your account</p>
+                  <p className="text-sm font-medium text-foreground">Two-Factor Auth</p>
+                  <p className="text-xs text-muted-foreground">Extra security</p>
                 </div>
                 <Switch />
               </div>
-              <Button variant="outline">Change Password</Button>
+              <Button variant="outline" size="sm">Change Password</Button>
             </CardContent>
           </Card>
 
           {/* Data */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Database className="h-5 w-5 text-primary" />
-                Data Management
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <Database className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                Data
               </CardTitle>
-              <CardDescription>Export and manage your data</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Export & manage</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-3">
-                <Button variant="outline">Export All Data</Button>
-                <Button variant="outline">Clear History</Button>
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">Export All</Button>
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">Clear History</Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Data retention: 90 days. Storage used: 24.5 MB / 100 MB
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
+                Retention: 90 days • Storage: 24.5 MB / 100 MB
               </p>
             </CardContent>
           </Card>
 
           {/* Logout */}
           <Card className="border-destructive/50">
-            <CardContent className="flex items-center justify-between pt-6">
+            <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 sm:pt-6">
               <div>
                 <p className="font-medium text-foreground">Sign Out</p>
-                <p className="text-sm text-muted-foreground">Log out from your account</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Log out</p>
               </div>
-              <Button variant="destructive">
+              <Button variant="destructive" size="sm">
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign Out
               </Button>
