@@ -1,31 +1,40 @@
 import {
   LayoutDashboard,
   Zap,
+  Droplets,
+  Flame,
   Lightbulb,
   Bell,
+  BarChart3,
   Settings,
   Cpu,
   Wifi,
   ChevronLeft,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { NavLink, useLocation } from "react-router-dom";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: Zap, label: "Energy", active: false },
-  { icon: Lightbulb, label: "Devices", active: false },
-  { icon: Bell, label: "Alerts", active: false },
-  { icon: Settings, label: "Settings", active: false },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: Zap, label: "Energy", path: "/energy" },
+  { icon: Droplets, label: "Water", path: "/water" },
+  { icon: Flame, label: "Gas & Safety", path: "/gas" },
+  { icon: Lightbulb, label: "Devices", path: "/control" },
+  { icon: Bell, label: "Alerts", path: "/alerts" },
+  { icon: BarChart3, label: "Analytics", path: "/analytics" },
+  { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
 export function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
 
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
+        "flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 sticky top-0",
         collapsed ? "w-[72px]" : "w-64"
       )}
     >
@@ -50,21 +59,25 @@ export function DashboardSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-3">
-        {navItems.map((item) => (
-          <button
-            key={item.label}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-              item.active
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/25"
-                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-            )}
-          >
-            <item.icon className="h-5 w-5 shrink-0" />
-            {!collapsed && <span>{item.label}</span>}
-          </button>
-        ))}
+      <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <NavLink
+              key={item.label}
+              to={item.path}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                isActive
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/25"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              )}
+            >
+              <item.icon className="h-5 w-5 shrink-0" />
+              {!collapsed && <span>{item.label}</span>}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Connection Status */}
