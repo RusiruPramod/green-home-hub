@@ -39,6 +39,8 @@ export function EnergyChart({ sensorData }: EnergyChartProps) {
 
   // Update chart with new sensor data
   useEffect(() => {
+    if (!sensorData) return;
+    
     const now = new Date();
     const newPoint: ChartDataPoint = {
       time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
