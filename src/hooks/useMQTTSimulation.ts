@@ -27,10 +27,10 @@ interface MQTTSimulationReturn {
 }
 
 // Random values pool for sensor readings
-const VOLTAGE_VALUES = [34, 34, 78, 4, 785, 220, 225, 228.5, 230, 235, 238, 240, 245, 250, 210, 215];
-const CURRENT_VALUES = [34, 34, 78, 4, 785, 1.2, 1.5, 1.8, 2.1, 2.5, 3.0, 3.5, 4.2, 5.0, 0.5, 0.8];
-const POWER_VALUES = [34, 34, 78, 4, 785, 300, 350, 400, 450, 500, 600, 750, 850, 1000, 1200, 1500];
-const GAS_VALUES = [34, 34, 78, 4, 785, 250, 300, 320, 350, 380, 400, 450, 500, 550, 600, 200];
+const VOLTAGE_VALUES = [34, 228.540, 245, 250, 210, 215];
+const CURRENT_VALUES = [34, 34, 78, 3.5, 4.2, 5.0, 0.5, 0.8];
+const POWER_VALUES = [34, 34, 78, 4,  850, 1000, 1200, 1500];
+const GAS_VALUES = [550, 600, 200];
 const WATER_LEVEL_VALUES = [34, 34, 78, 4, 785, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
 const FLOW_RATE_VALUES = [34, 34, 78, 4, 785, 8, 10, 12, 14, 16, 18, 20, 22, 25, 5, 15];
 
@@ -54,13 +54,13 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   const [sensorData, setSensorData] = useState<SensorData>({
-    voltage: getRandomValue(VOLTAGE_VALUES),
-    current: getRandomValue(CURRENT_VALUES),
-    power: getRandomValue(POWER_VALUES),
-    gas: getRandomValue(GAS_VALUES),
+    voltage: 228.5,
+    current: 1.52,
+    power: 347,
+    gas: 320,
     pir: false,
-    waterLevel: getRandomValue(WATER_LEVEL_VALUES),
-    flowRate: getRandomValue(FLOW_RATE_VALUES),
+    waterLevel: 78,
+    flowRate: 12,
   });
 
   const [deviceStates, setDeviceStates] = useState<DeviceStates>({
@@ -89,13 +89,22 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
 
     const updateInterval = setInterval(() => {
       setSensorData((prev) => {
-        // Use random values from specific pools
-        const newVoltage = getRandomValue(VOLTAGE_VALUES);
-        const newCurrent = getRandomValue(CURRENT_VALUES);
-        const newPower = getRandomValue(POWER_VALUES);
-        const newGas = getRandomValue(GAS_VALUES);
-        const newWaterLevel = getRandomValue(WATER_LEVEL_VALUES);
-        const newFlowRate = getRandomValue(FLOW_RATE_VALUES);
+        // Calculate power based on voltage and current
+        const newVoltage = fluctuate(prev.voltage, 2, 420, 240);
+        const newCurrent = fluctuate(prev.current, 0.2, 0.5, 5);
+        const newPower = Number((newVoltage * newCurrent).toFixed(0));
+        
+        // Water level changes based on pump status
+        const waterChange = deviceStates.waterPump ? -0.5 : 0.1;
+        const newWaterLevel = Math.max(0, Math.min(100, prev.waterLevel + waterChange));
+        
+        // Flow rate depends on pump
+        const newFlowRate = deviceStates.waterPump 
+          ? fluctuate(15, 2, 10, 20)
+          : fluctuate(0.5, 0.3, 0, 2);
+
+        // Gas level fluctuates
+        const newGas = fluctuate(prev.gas, 15, 200, 500);
 
         // Random PIR triggers
         const newPir = deviceStates.motionDetection && Math.random() < 0.1;
