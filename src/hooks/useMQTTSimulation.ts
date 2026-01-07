@@ -27,11 +27,16 @@ interface MQTTSimulationReturn {
 }
 
 // Random values pool for sensor readings
-const RANDOM_VALUES = [34, 34, 78, 4, 785, 455, 900, 1000, 2200, 35, 666, 444, 785, 446, 3, 3, 8, 305];
+const VOLTAGE_VALUES = [34, 34, 78, 4, 785, 220, 225, 228.5, 230, 235, 238, 240, 245, 250, 210, 215];
+const CURRENT_VALUES = [34, 34, 78, 4, 785, 1.2, 1.5, 1.8, 2.1, 2.5, 3.0, 3.5, 4.2, 5.0, 0.5, 0.8];
+const POWER_VALUES = [34, 34, 78, 4, 785, 300, 350, 400, 450, 500, 600, 750, 850, 1000, 1200, 1500];
+const GAS_VALUES = [34, 34, 78, 4, 785, 250, 300, 320, 350, 380, 400, 450, 500, 550, 600, 200];
+const WATER_LEVEL_VALUES = [34, 34, 78, 4, 785, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
+const FLOW_RATE_VALUES = [34, 34, 78, 4, 785, 8, 10, 12, 14, 16, 18, 20, 22, 25, 5, 15];
 
-// Get random value from the pool
-const getRandomValue = () => {
-  return RANDOM_VALUES[Math.floor(Math.random() * RANDOM_VALUES.length)];
+// Get random value from specific pool
+const getRandomValue = (pool: number[]) => {
+  return pool[Math.floor(Math.random() * pool.length)];
 };
 
 // Simulate realistic sensor value fluctuations
@@ -49,13 +54,13 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   const [sensorData, setSensorData] = useState<SensorData>({
-    voltage: getRandomValue(),
-    current: getRandomValue(),
-    power: getRandomValue(),
-    gas: getRandomValue(),
+    voltage: getRandomValue(VOLTAGE_VALUES),
+    current: getRandomValue(CURRENT_VALUES),
+    power: getRandomValue(POWER_VALUES),
+    gas: getRandomValue(GAS_VALUES),
     pir: false,
-    waterLevel: getRandomValue(),
-    flowRate: getRandomValue(),
+    waterLevel: getRandomValue(WATER_LEVEL_VALUES),
+    flowRate: getRandomValue(FLOW_RATE_VALUES),
   });
 
   const [deviceStates, setDeviceStates] = useState<DeviceStates>({
@@ -84,13 +89,13 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
 
     const updateInterval = setInterval(() => {
       setSensorData((prev) => {
-        // Use random values from the pool
-        const newVoltage = getRandomValue();
-        const newCurrent = getRandomValue();
-        const newPower = getRandomValue();
-        const newGas = getRandomValue();
-        const newWaterLevel = getRandomValue();
-        const newFlowRate = getRandomValue();
+        // Use random values from specific pools
+        const newVoltage = getRandomValue(VOLTAGE_VALUES);
+        const newCurrent = getRandomValue(CURRENT_VALUES);
+        const newPower = getRandomValue(POWER_VALUES);
+        const newGas = getRandomValue(GAS_VALUES);
+        const newWaterLevel = getRandomValue(WATER_LEVEL_VALUES);
+        const newFlowRate = getRandomValue(FLOW_RATE_VALUES);
 
         // Random PIR triggers
         const newPir = deviceStates.motionDetection && Math.random() < 0.1;
