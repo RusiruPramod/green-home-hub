@@ -1,7 +1,9 @@
-import { BarChart3, TrendingUp, TrendingDown, Calendar, Download, Zap, Droplets, Flame } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Calendar, Download, Zap, Droplets, Flame, Gauge } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { MechanicalMeter } from "@/components/dashboard/MechanicalMeter";
+import { DigitalCounter } from "@/components/dashboard/DigitalCounter";
 import { 
   AreaChart, 
   Area, 
@@ -72,6 +74,76 @@ const Analytics = () => {
         </header>
 
         <div className="space-y-6 p-6">
+          {/* Mechanical Meters Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Gauge className="h-5 w-5 text-primary" />
+                Resource Meters
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                <MechanicalMeter 
+                  value={218.5} 
+                  maxValue={250} 
+                  unit="V" 
+                  label="Voltage" 
+                />
+                <MechanicalMeter 
+                  value={4.2} 
+                  maxValue={10} 
+                  unit="A" 
+                  label="Current" 
+                />
+                <MechanicalMeter 
+                  value={72} 
+                  maxValue={100} 
+                  unit="%" 
+                  label="Water Level" 
+                />
+                <MechanicalMeter 
+                  value={145} 
+                  maxValue={500} 
+                  unit="ppm" 
+                  label="Gas Level" 
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Digital Counters */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Cumulative Usage Meters</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                <DigitalCounter 
+                  value={124568.72} 
+                  digits={8} 
+                  label="Total Energy" 
+                  unit="kWh" 
+                  icon={<Zap className="h-5 w-5 text-primary" />}
+                />
+                <DigitalCounter 
+                  value={8756.34} 
+                  digits={7} 
+                  label="Water Used" 
+                  unit="Liters" 
+                  icon={<Droplets className="h-5 w-5 text-info" />}
+                />
+                <DigitalCounter 
+                  value={1245.89} 
+                  digits={6} 
+                  label="Gas Used" 
+                  unit="m³" 
+                  icon={<Flame className="h-5 w-5 text-warning" />}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Insights */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {insights.map((insight, index) => (
