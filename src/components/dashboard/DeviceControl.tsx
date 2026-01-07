@@ -1,27 +1,19 @@
-import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { LucideIcon } from "lucide-react";
 
 interface DeviceControlProps {
   name: string;
   icon: LucideIcon;
-  initialState?: boolean;
-  onToggle?: (state: boolean) => void;
+  isOn: boolean;
+  onToggle: () => void;
 }
 
 export function DeviceControl({
   name,
   icon: Icon,
-  initialState = false,
+  isOn,
   onToggle,
 }: DeviceControlProps) {
-  const [isOn, setIsOn] = useState(initialState);
-
-  const handleToggle = (checked: boolean) => {
-    setIsOn(checked);
-    onToggle?.(checked);
-  };
-
   return (
     <div className={`sensor-card flex items-center justify-between transition-all ${isOn ? 'ring-2 ring-primary/20' : ''}`}>
       <div className="flex items-center gap-3">
@@ -39,7 +31,7 @@ export function DeviceControl({
       </div>
       <Switch
         checked={isOn}
-        onCheckedChange={handleToggle}
+        onCheckedChange={onToggle}
         className="data-[state=checked]:bg-primary"
       />
     </div>
