@@ -33,12 +33,12 @@ const Gas = () => {
       <DashboardSidebar />
       
       <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 backdrop-blur-lg">
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
+          <div className="flex items-center gap-2 md:gap-3">
             <MobileSidebarTrigger />
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">Gas & Safety</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Detection & security</p>
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Gas & Safety</h1>
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Detection & security</p>
             </div>
           </div>
           {isDangerGas && (
@@ -49,7 +49,7 @@ const Gas = () => {
           )}
         </header>
 
-        <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
           {/* Gas Level Card */}
           <Card className={`${status.bg} border-2 ${isDangerGas ? "border-destructive" : isHighGas ? "border-warning" : "border-success"}`}>
             <CardContent className="pt-4 sm:pt-6">
@@ -87,7 +87,7 @@ const Gas = () => {
           </Card>
 
           {/* Safety Controls */}
-          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
             <Card>
               <CardHeader className="pb-2 sm:pb-4">
                 <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
@@ -168,16 +168,16 @@ const Gas = () => {
 
           {/* PIR Status */}
           <Card>
-            <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="text-sm sm:text-base">PIR Motion Sensor</CardTitle>
+            <CardHeader className="pb-2 sm:pb-4 md:pb-6">
+              <CardTitle className="text-sm sm:text-base md:text-lg">PIR Motion Sensor</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4 sm:gap-6">
-                <div className={`flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-full ${sensorData.pir ? "bg-primary animate-pulse" : "bg-muted"}`}>
-                  <Eye className={`h-7 w-7 sm:h-10 sm:w-10 ${sensorData.pir ? "text-primary-foreground" : "text-muted-foreground"}`} />
+              <div className="flex items-center gap-4 sm:gap-6 md:gap-8">
+                <div className={`flex h-14 w-14 sm:h-20 sm:w-20 md:h-24 md:w-24 items-center justify-center rounded-full ${sensorData.pir ? "bg-primary animate-pulse" : "bg-muted"}`}>
+                  <Eye className={`h-7 w-7 sm:h-10 sm:w-10 md:h-12 md:w-12 ${sensorData.pir ? "text-primary-foreground" : "text-muted-foreground"}`} />
                 </div>
                 <div>
-                  <p className="text-lg sm:text-2xl font-bold text-foreground">
+                  <p className="text-lg sm:text-2xl md:text-3xl font-bold text-foreground">
                     {sensorData.pir ? "Motion Detected!" : "No Motion"}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">

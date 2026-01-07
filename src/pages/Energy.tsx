@@ -22,12 +22,12 @@ const Energy = () => {
       <DashboardSidebar />
       
       <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 backdrop-blur-lg">
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
+          <div className="flex items-center gap-2 md:gap-3">
             <MobileSidebarTrigger />
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">Energy</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Power consumption & efficiency</p>
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Energy</h1>
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Power consumption & efficiency</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -42,9 +42,9 @@ const Energy = () => {
           </div>
         </header>
 
-        <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
           {/* Energy Stats */}
-          <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
             {energyStats.map((stat, index) => (
               <Card key={stat.label} className="animate-fade-up opacity-0" style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}>
                 <CardContent className="pt-4 sm:pt-6">
@@ -63,8 +63,8 @@ const Energy = () => {
 
           {/* Live Readings */}
           <div>
-            <h2 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold text-foreground">Live Readings</h2>
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+            <h2 className="mb-3 sm:mb-4 md:mb-5 text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-foreground">Live Readings</h2>
+            <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
               <SensorCard
                 title="Voltage"
                 value={sensorData.voltage}
@@ -93,7 +93,7 @@ const Energy = () => {
           </div>
 
           {/* Energy Chart */}
-          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
             <EnergyChart sensorData={sensorData} />
             
             <Card>
@@ -134,11 +134,11 @@ const Energy = () => {
 
           {/* Peak Usage Hours */}
           <Card>
-            <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="text-sm sm:text-base">Peak Usage Hours</CardTitle>
+            <CardHeader className="pb-2 sm:pb-4 md:pb-6">
+              <CardTitle className="text-sm sm:text-base md:text-lg">Peak Usage Hours</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+              <div className="grid gap-3 sm:gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
                 <div className="rounded-lg bg-destructive/10 p-3 sm:p-4">
                   <p className="text-xs sm:text-sm font-medium text-destructive">High Usage</p>
                   <p className="text-base sm:text-lg font-bold text-foreground">6 PM - 10 PM</p>

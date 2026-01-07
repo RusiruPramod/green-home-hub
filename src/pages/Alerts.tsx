@@ -64,13 +64,13 @@ const Alerts = () => {
       <DashboardSidebar />
       
       <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 backdrop-blur-lg">
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
+          <div className="flex items-center gap-2 md:gap-3">
             <MobileSidebarTrigger />
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
               <div>
-                <h1 className="text-lg sm:text-xl font-bold text-foreground">Alerts</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Notifications & logs</p>
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Alerts</h1>
+                <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Notifications & logs</p>
               </div>
               {unacknowledgedCount > 0 && (
                 <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-destructive text-[10px] sm:text-xs font-bold text-destructive-foreground">
@@ -85,9 +85,9 @@ const Alerts = () => {
           </Button>
         </header>
 
-        <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
           {/* Stats */}
-          <div className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
+          <div className="grid gap-2 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-2 sm:grid-cols-4 xl:grid-cols-4">
             {[
               { type: "danger" as const, label: "Critical", count: alerts.filter(a => a.type === "danger").length, color: "bg-destructive" },
               { type: "warning" as const, label: "Warnings", count: alerts.filter(a => a.type === "warning").length, color: "bg-warning" },
@@ -111,13 +111,13 @@ const Alerts = () => {
           </div>
 
           {/* Search and Filter */}
-          <div className="flex gap-2 sm:gap-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 md:gap-5">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search..." className="pl-10 text-sm" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 md:h-5 md:w-5 -translate-y-1/2 text-muted-foreground" />
+              <Input placeholder="Search..." className="pl-10 text-sm md:text-base" />
             </div>
-            <Button variant="outline" size="sm" className="hidden sm:flex">
-              <Filter className="mr-2 h-4 w-4" />
+            <Button variant="outline" size="sm" className="hidden sm:flex md:text-base">
+              <Filter className="mr-2 h-4 w-4 md:h-5 md:w-5" />
               Filter
             </Button>
           </div>

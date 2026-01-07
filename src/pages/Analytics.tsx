@@ -58,12 +58,12 @@ const Analytics = () => {
       <DashboardSidebar />
       
       <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 backdrop-blur-lg">
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
+          <div className="flex items-center gap-2 md:gap-3">
             <MobileSidebarTrigger />
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">Analytics</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Usage insights</p>
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Analytics</h1>
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Usage insights</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -78,12 +78,12 @@ const Analytics = () => {
           </div>
         </header>
 
-        <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
           {/* Live Mechanical Meters */}
           <Card>
-            <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-                <Gauge className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <CardHeader className="pb-2 sm:pb-4 md:pb-6">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base md:text-lg">
+                <Gauge className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
                 Live Sensors
                 <span className={`ml-auto text-[10px] sm:text-xs px-2 py-1 rounded-full ${
                   connectionStatus === "connected" 
@@ -95,7 +95,7 @@ const Analytics = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-3 sm:gap-6 md:gap-8">
                 <MechanicalMeter
                   value={sensorData.voltage}
                   min={200}
@@ -151,7 +151,7 @@ const Analytics = () => {
           </Card>
 
           {/* Insights */}
-          <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
             {insights.map((insight, index) => (
               <Card key={insight.title} className="animate-fade-up opacity-0" style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}>
                 <CardContent className="pt-4 sm:pt-6">
@@ -183,7 +183,7 @@ const Analytics = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px] sm:h-[300px]">
+              <div className="h-[200px] sm:h-[300px] md:h-[350px] lg:h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={weeklyData}>
                     <defs>
@@ -216,14 +216,14 @@ const Analytics = () => {
             </CardContent>
           </Card>
 
-          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
             {/* Monthly Comparison */}
             <Card>
-              <CardHeader className="pb-2 sm:pb-4">
-                <CardTitle className="text-sm sm:text-base">Monthly Compare</CardTitle>
+              <CardHeader className="pb-2 sm:pb-4 md:pb-6">
+                <CardTitle className="text-sm sm:text-base md:text-lg">Monthly Compare</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[180px] sm:h-[250px]">
+                <div className="h-[180px] sm:h-[250px] md:h-[300px] lg:h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={monthlyComparison}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -247,12 +247,12 @@ const Analytics = () => {
 
             {/* Device Usage Distribution */}
             <Card>
-              <CardHeader className="pb-2 sm:pb-4">
-                <CardTitle className="text-sm sm:text-base">Device Usage</CardTitle>
+              <CardHeader className="pb-2 sm:pb-4 md:pb-6">
+                <CardTitle className="text-sm sm:text-base md:text-lg">Device Usage</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-                  <div className="h-[150px] w-[150px] sm:h-[200px] sm:w-[200px]">
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 md:gap-10">
+                  <div className="h-[150px] w-[150px] sm:h-[200px] sm:w-[200px] md:h-[250px] md:w-[250px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -295,11 +295,11 @@ const Analytics = () => {
 
           {/* Tips */}
           <Card>
-            <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="text-sm sm:text-base">Energy Tips</CardTitle>
+            <CardHeader className="pb-2 sm:pb-4 md:pb-6">
+              <CardTitle className="text-sm sm:text-base md:text-lg">Energy Tips</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+              <div className="grid gap-3 sm:gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
                 {[
                   { tip: "Schedule lights off at 11 PM", savings: "₹120/mo", priority: "High" },
                   { tip: "Reduce pump runtime 30 min", savings: "₹85/mo", priority: "Medium" },

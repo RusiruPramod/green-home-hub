@@ -48,17 +48,17 @@ const Index = () => {
       
       <main className="flex-1 overflow-auto">
         {/* Header */}
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 backdrop-blur-lg">
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
+          <div className="flex items-center gap-2 md:gap-3">
             <MobileSidebarTrigger />
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">Dashboard</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">
                 Real-time monitoring & control
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
             <div className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-2 sm:px-3 py-1 sm:py-1.5 ${
               connectionStatus === "connected" 
                 ? "bg-success/10" 
@@ -92,12 +92,12 @@ const Index = () => {
         </header>
 
         {/* Content */}
-        <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
           {/* Stats Overview */}
           <StatsOverview />
 
           {/* Sensor Grid */}
-          <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
             <SensorCard
               title="Voltage"
               value={sensorData.voltage}
@@ -137,8 +137,8 @@ const Index = () => {
           </div>
 
           {/* Charts & Water Level */}
-          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div className="md:col-span-2 lg:col-span-2">
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+            <div className="md:col-span-2 lg:col-span-2 xl:col-span-2">
               <EnergyChart sensorData={sensorData} />
             </div>
             <WaterLevelGauge 
@@ -148,11 +148,11 @@ const Index = () => {
           </div>
 
           {/* Device Controls & Alerts */}
-          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
             {/* Device Controls */}
-            <div className="space-y-3 sm:space-y-4">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground">Device Controls</h2>
-              <div className="grid gap-2 sm:gap-3 grid-cols-2">
+            <div className="space-y-3 sm:space-y-4 md:space-y-5">
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-foreground">Device Controls</h2>
+              <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 lg:grid-cols-2">
                 <DeviceControl
                   name="Living Room Lights"
                   icon={Lightbulb}

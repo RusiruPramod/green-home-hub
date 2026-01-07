@@ -24,17 +24,17 @@ const SettingsPage = () => {
       <DashboardSidebar />
       
       <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 backdrop-blur-lg">
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
+          <div className="flex items-center gap-2 md:gap-3">
             <MobileSidebarTrigger />
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">Settings</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Configure dashboard</p>
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Settings</h1>
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Configure dashboard</p>
             </div>
           </div>
         </header>
 
-        <div className="max-w-4xl space-y-4 sm:space-y-6 p-3 sm:p-6">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10">
           {/* Profile */}
           <Card>
             <CardHeader className="pb-2 sm:pb-4">
@@ -116,8 +116,8 @@ const SettingsPage = () => {
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">MQTT & API</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <CardContent className="space-y-4 md:space-y-5">
+              <div className="grid gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="text-xs sm:text-sm">MQTT Broker</Label>
                   <Input defaultValue="mqtt://192.168.1.100:1883" className="text-xs sm:text-sm" />
@@ -167,8 +167,8 @@ const SettingsPage = () => {
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">Export & manage</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2 sm:gap-3">
+            <CardContent className="space-y-4 md:space-y-5">
+              <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm">Export All</Button>
                 <Button variant="outline" size="sm" className="text-xs sm:text-sm">Clear History</Button>
               </div>
