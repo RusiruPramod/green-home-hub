@@ -27,31 +27,32 @@ const navItems = [
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
-export function DashboardSidebar() {
+export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
 
   return (
     <aside
       className={cn(
-        "hidden lg:flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 sticky top-0",
-        collapsed ? "w-[72px]" : "w-64"
+        "flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
+        isMobile ? "w-full" : "hidden lg:flex sticky top-0",
+        !isMobile && (collapsed ? "w-[72px]" : "w-64")
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
-              <Cpu className="h-5 w-5 text-sidebar-primary-foreground" />
+      <div className="flex h-14 sm:h-16 items-center justify-between border-b border-sidebar-border px-4 sm:px-5">
+        {(!collapsed || isMobile) && (
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-sidebar-primary">
+              <Cpu className="h-5 w-5 sm:h-6 sm:w-6 text-sidebar-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-sidebar-foreground">IoT Home</h1>
-              <p className="text-[10px] text-sidebar-foreground/60">Smart Monitoring</p>
+              <h1 className="text-sm sm:text-base font-bold text-sidebar-foreground">IoT Home</h1>
+              <p className="text-[10px] sm:text-xs text-sidebar-foreground/60">Smart Monitoring</p>
             </div>
           </div>
         )}
-        {collapsed && (
+        {collapsed && !isMobile && (
           <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
             <Cpu className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
@@ -59,7 +60,7 @@ export function DashboardSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-1 p-3 sm:p-4 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -67,55 +68,57 @@ export function DashboardSidebar() {
               key={item.label}
               to={item.path}
               className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                "flex w-full items-center gap-3 sm:gap-4 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base font-medium transition-all",
                 isActive
                   ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/25"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-95"
               )}
             >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              <item.icon className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" />
+              {(!collapsed || isMobile) && <span>{item.label}</span>}
             </NavLink>
           );
         })}
       </nav>
 
       {/* Connection Status */}
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-sidebar-border p-3 sm:p-4">
         <div
           className={cn(
-            "flex items-center gap-3 rounded-lg bg-sidebar-accent/50 px-3 py-2.5",
-            collapsed && "justify-center"
+            "flex items-center gap-3 sm:gap-4 rounded-lg bg-sidebar-accent/50 px-3 sm:px-4 py-2.5 sm:py-3",
+            collapsed && !isMobile && "justify-center"
           )}
         >
           <div className="relative">
-            <Wifi className="h-5 w-5 text-sidebar-primary" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-success ring-2 ring-sidebar" />
+            <Wifi className="h-5 w-5 sm:h-6 sm:w-6 text-sidebar-primary" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-success ring-2 ring-sidebar" />
           </div>
-          {!collapsed && (
+          {(!collapsed || isMobile) && (
             <div className="flex-1">
-              <p className="text-xs font-medium text-sidebar-foreground">ESP32 Connected</p>
-              <p className="text-[10px] text-sidebar-foreground/60">192.168.1.45</p>
+              <p className="text-xs sm:text-sm font-medium text-sidebar-foreground">ESP32 Connected</p>
+              <p className="text-[10px] sm:text-xs text-sidebar-foreground/60">192.168.1.45</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Collapse Toggle */}
-      <div className="border-t border-sidebar-border p-3">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-        >
-          <ChevronLeft
-            className={cn(
-              "h-5 w-5 transition-transform",
-              collapsed && "rotate-180"
-            )}
-          />
-          {!collapsed && <span>Collapse</span>}
-        </button>
-      </div>
+      {!isMobile && (
+        <div className="border-t border-sidebar-border p-3">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          >
+            <ChevronLeft
+              className={cn(
+                "h-5 w-5 transition-transform",
+                collapsed && "rotate-180"
+              )}
+            />
+            {!collapsed && <span>Collapse</span>}
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
