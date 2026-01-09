@@ -11,6 +11,7 @@ import {
   Wifi,
   ChevronLeft,
   LogOut,
+  Server,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ const navItems = [
   { icon: Lightbulb, label: "Devices", path: "/control" },
   { icon: Bell, label: "Alerts", path: "/alerts" },
   { icon: BarChart3, label: "Analytics", path: "/analytics" },
+  { icon: Server, label: "API Services", path: "/services" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 

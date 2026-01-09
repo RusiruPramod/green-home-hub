@@ -1,4 +1,59 @@
-# Welcome to your Lovable project
+# Green Home Hub - Full Stack IoT Application
+
+Complete MERN stack application for smart home monitoring with IoT devices.
+
+## 🚀 Quick Start Guide
+
+### Prerequisites
+- Node.js (v18 or higher)
+- MongoDB (local or MongoDB Atlas)
+- npm or yarn
+
+### 1. Install Dependencies
+
+**Backend:**
+```bash
+cd backend
+npm install
+```
+
+**Frontend:**
+```bash
+npm install
+```
+
+### 2. Configure Environment Variables
+
+The `.env` and `.env.local` files are already created in the root directory.
+
+### 3. Start MongoDB
+Make sure MongoDB is running on your system
+
+### 4. Start the Servers
+
+**Terminal 1 - Backend Server:**
+```bash
+cd backend
+npm run dev
+```
+Backend will run on: `http://localhost:5000`
+
+**Terminal 2 - Frontend Development Server:**
+```bash
+npm run dev
+```
+Frontend will run on: `http://localhost:5173`
+
+## 📁 Project Structure
+
+- `backend/` - Node.js + Express + MongoDB backend
+- `src/` - React + TypeScript + Vite frontend
+- `src/services/` - API integration layer
+- `src/hooks/` - Custom React hooks for data fetching
+
+## 🔌 API Endpoints
+
+Visit `/services` page in the application to see all available API endpoints.
 
 ## Project info
 
