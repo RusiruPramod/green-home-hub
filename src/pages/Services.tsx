@@ -206,11 +206,9 @@ export default function ServicesPage() {
             <div>
               <h3 className="font-semibold mb-2">2. Example API Call</h3>
               <code className="block bg-gray-100 p-3 rounded text-sm">
-                fetch('{apiUrl}/sensors/latest')
-                  <br />
-                  &nbsp;&nbsp;.then(res => res.json())
-                  <br />
-                  &nbsp;&nbsp;.then(data => console.log(data));
+                {`fetch('${apiUrl}/sensors/latest')
+  .then(res => res.json())
+  .then(data => console.log(data));`}
               </code>
             </div>
             <div>
