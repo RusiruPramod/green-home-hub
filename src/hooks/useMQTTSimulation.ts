@@ -83,61 +83,73 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   const thresholdsRef = useRef({ gasDangerActive: false, waterLowActive: false });
 
   useEffect(() => {
-    const offSensors = listenSensors(
-      (data) => {
-        setSensorData({
-          voltage: data.voltage,
-          current: data.current,
-          power: data.power,
-          gas: data.gas,
-          water: data.water,
-          motion: data.motion,
-          flowRate: data.flowRate,
-          pir: data.motion,
-          waterLevel: data.water,
-        });
-        setIsSensorReady(true);
-        setLastUpdate(data.updatedAt ? new Date(data.updatedAt) : new Date());
-        setError(null);
-      },
-      (listenerError) => {
-        setError(listenerError.message || "Failed to listen to sensors.");
-      }
-    );
+    try {
+      const offSensors = listenSensors(
+        (data) => {
+          setSensorData({
+            voltage: data.voltage,
+            current: data.current,
+            power: data.power,
+            gas: data.gas,
+            water: data.water,
+            motion: data.motion,
+            flowRate: data.flowRate,
+            pir: data.motion,
+            waterLevel: data.water,
+          });
+          setIsSensorReady(true);
+          setLastUpdate(data.updatedAt ? new Date(data.updatedAt) : new Date());
+          setError(null);
+        },
+        (listenerError) => {
+          setError(listenerError.message || "Failed to listen to sensors.");
+        }
+      );
 
-    const offDevices = listenDevices(
-      (data) => {
-        setDeviceStates({
-          light: data.light,
-          pump: data.pump,
-          fan: data.fan,
-          motionDetection: data.motionDetection,
-          lights: data.light,
-          waterPump: data.pump,
-          exhaustFan: data.fan,
-        });
-        setIsDeviceReady(true);
-        setError(null);
-      },
-      (listenerError) => {
-        setError(listenerError.message || "Failed to listen to devices.");
-      }
-    );
+      const offDevices = listenDevices(
+        (data) => {
+          setDeviceStates({
+            light: data.light,
+            pump: data.pump,
+            fan: data.fan,
+            motionDetection: data.motionDetection,
+            lights: data.light,
+            waterPump: data.pump,
+            exhaustFan: data.fan,
+          });
+          setIsDeviceReady(true);
+          setError(null);
+        },
+        (listenerError) => {
+          setError(listenerError.message || "Failed to listen to devices.");
+        }
+      );
 
-    const offAlerts = listenAlerts(
-      (items) => {
-        setAlerts(items);
-      },
-      (listenerError) => {
-        setError(listenerError.message || "Failed to listen to alerts.");
-      }
-    );
+      const offAlerts = listenAlerts(
+        (items) => {
+          setAlerts(items);
+        },
+        (listenerError) => {
+          setError(listenerError.message || "Failed to listen to alerts.");
+        }
+      );
 
-    return () => {
-      offSensors();
-      offDevices();
-      offAlerts();
-    };
+      return () => {
+        offSensors();
+        offDevices();
+        offAlerts();
+      };
+    } catch (initializationError) {
+      const errorMsg =
+        initializationError instanceof Error
+          ? initializationError.message
+          : "Failed to initialize Firebase. Check your environment variables.";
+      setError(errorMsg);
+      setLoading(false);
+      return () => {
+        /* cleanup */
+      };
+    }
   }, []);
 
   useEffect(() => {

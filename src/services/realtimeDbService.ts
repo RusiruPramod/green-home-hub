@@ -8,7 +8,7 @@ import {
   update,
   type Unsubscribe,
 } from "firebase/database";
-import { realtimeDb } from "@/services/firebase";
+import { realtimeDb, initError } from "@/services/firebase";
 
 export interface SensorsPayload {
   gas: number;
@@ -61,11 +61,25 @@ const deviceDefaults: DevicesPayload = {
   motionDetection: false,
 };
 
+const checkFirebaseInit = () => {
+  if (initError) {
+    throw initError;
+  }
+  if (!realtimeDb) {
+    throw new Error(
+      "Firebase Realtime Database not initialized. " +
+      "Please fill in VITE_FIREBASE_* environment variables. " +
+      "See FIREBASE_SETUP.md for instructions."
+    );
+  }
+};
+
 export const listenSensors = (
   onData: (data: SensorsPayload) => void,
   onError?: (error: Error) => void
 ): Unsubscribe => {
-  const sensorsRef = ref(realtimeDb, "sensors");
+  checkFirebaseInit();
+  const sensorsRef = ref(realtimeDb!, "sensors");
 
   return onValue(
     sensorsRef,
@@ -86,7 +100,8 @@ export const listenDevices = (
   onData: (data: DevicesPayload) => void,
   onError?: (error: Error) => void
 ): Unsubscribe => {
-  const devicesRef = ref(realtimeDb, "devices");
+  checkFirebaseInit();
+  const devicesRef = ref(realtimeDb!, "devices");
 
   return onValue(
     devicesRef,
@@ -107,14 +122,16 @@ export const updateDevice = async (
   deviceId: keyof Omit<DevicesPayload, "updatedAt">,
   state: boolean
 ) => {
-  await update(ref(realtimeDb, "devices"), {
+  checkFirebaseInit();
+  await update(ref(realtimeDb!, "devices"), {
     [deviceId]: state,
     updatedAt: serverTimestamp(),
   });
 };
 
 export const pushAlert = async (alert: AlertPayload) => {
-  const alertsRef = ref(realtimeDb, "alerts");
+  checkFirebaseInit();
+  const alertsRef = ref(realtimeDb!, "alerts");
   const newAlertRef = push(alertsRef);
 
   await set(newAlertRef, {
@@ -130,7 +147,8 @@ export const listenAlerts = (
   onData: (data: AlertRecord[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe => {
-  const alertsRef = ref(realtimeDb, "alerts");
+  checkFirebaseInit();
+  const alertsRef = ref(realtimeDb!, "alerts");
 
   return onValue(
     alertsRef,
@@ -159,15 +177,18 @@ export const listenAlerts = (
 };
 
 export const acknowledgeAlert = async (alertId: string, acknowledged = true) => {
-  await update(ref(realtimeDb, `alerts/${alertId}`), {
+  checkFirebaseInit();
+  await update(ref(realtimeDb!, `alerts/${alertId}`), {
     acknowledged,
   });
 };
 
 export const deleteAlert = async (alertId: string) => {
-  await remove(ref(realtimeDb, `alerts/${alertId}`));
+  checkFirebaseInit();
+  await remove(ref(realtimeDb!, `alerts/${alertId}`));
 };
 
 export const clearAlerts = async () => {
-  await remove(ref(realtimeDb, "alerts"));
+  checkFirebaseInit();
+  await remove(ref(realtimeDb!, "alerts"));
 };

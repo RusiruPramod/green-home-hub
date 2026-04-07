@@ -4,6 +4,8 @@ Complete MERN stack application for smart home monitoring with IoT devices.
 
 ## 🚀 Quick Start Guide
 
+> **First time?** Start with [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) to configure Firebase in 5 minutes.
+
 ### Prerequisites
 - Node.js (v18 or higher)
 - MongoDB (local or MongoDB Atlas)
@@ -37,6 +39,8 @@ VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
+
+**📖 See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for detailed steps to get these credentials.**
 
 ### 3. Start MongoDB
 Make sure MongoDB is running on your system
