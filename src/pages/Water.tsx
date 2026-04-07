@@ -13,7 +13,7 @@ const Water = () => {
     { label: "Today's Usage", value: "156 L", change: "+8%", positive: false, icon: Droplets },
     { label: "Flow Rate", value: `${sensorData.flowRate} L/min`, change: "Normal", positive: true, icon: Waves },
     { label: "Tank Level", value: `${sensorData.waterLevel}%`, change: sensorData.waterLevel < 30 ? "Low" : "OK", positive: sensorData.waterLevel >= 30, icon: Timer },
-    { label: "Pump Status", value: deviceStates.waterPump ? "Running" : "Stopped", change: deviceStates.waterPump ? "Active" : "Idle", positive: deviceStates.waterPump, icon: Droplets },
+    { label: "Pump Status", value: deviceStates.pump ? "Running" : "Stopped", change: deviceStates.pump ? "Active" : "Idle", positive: deviceStates.pump, icon: Droplets },
   ];
 
   return (
@@ -72,19 +72,19 @@ const Water = () => {
               <CardContent className="space-y-4 sm:space-y-6">
                 <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:p-4">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full ${deviceStates.waterPump ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full ${deviceStates.pump ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                       <Droplets className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div>
                       <p className="text-sm sm:text-base font-medium text-foreground">Water Pump</p>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        {deviceStates.waterPump ? "Running" : "Stopped"}
+                        {deviceStates.pump ? "Running" : "Stopped"}
                       </p>
                     </div>
                   </div>
                   <Switch
-                    checked={deviceStates.waterPump}
-                    onCheckedChange={() => toggleDevice("waterPump")}
+                    checked={deviceStates.pump}
+                    onCheckedChange={() => void toggleDevice("pump")}
                   />
                 </div>
 

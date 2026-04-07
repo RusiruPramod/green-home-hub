@@ -15,30 +15,30 @@ const Control = () => {
 
   const devices = [
     { 
-      id: "lights" as const, 
+      id: "light" as const, 
       name: "Lights", 
       fullName: "Living Room Lights",
       icon: Lightbulb, 
-      isOn: deviceStates.lights,
+      isOn: deviceStates.light,
       hasSlider: true,
       sliderValue: brightness,
       setSliderValue: setBrightness,
       sliderLabel: "Brightness"
     },
     { 
-      id: "waterPump" as const, 
+      id: "pump" as const, 
       name: "Pump", 
       fullName: "Water Pump",
       icon: Droplets, 
-      isOn: deviceStates.waterPump,
+      isOn: deviceStates.pump,
       hasSlider: false
     },
     { 
-      id: "exhaustFan" as const, 
+      id: "fan" as const, 
       name: "Fan", 
       fullName: "Exhaust Fan",
       icon: Fan, 
-      isOn: deviceStates.exhaustFan,
+      isOn: deviceStates.fan,
       hasSlider: true,
       sliderValue: fanSpeed,
       setSliderValue: setFanSpeed,
@@ -86,7 +86,7 @@ const Control = () => {
               <Card 
                 key={device.id}
                 className={`cursor-pointer transition-all ${device.isOn ? "ring-2 ring-primary bg-primary/5" : ""}`}
-                onClick={() => toggleDevice(device.id)}
+                onClick={() => void toggleDevice(device.id)}
               >
                 <CardContent className="flex flex-col items-center justify-center py-4 sm:py-6">
                   <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full ${device.isOn ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
@@ -120,7 +120,7 @@ const Control = () => {
                     </div>
                     <Switch
                       checked={device.isOn}
-                      onCheckedChange={() => toggleDevice(device.id)}
+                      onCheckedChange={() => void toggleDevice(device.id)}
                       className="scale-110 sm:scale-125"
                     />
                   </div>

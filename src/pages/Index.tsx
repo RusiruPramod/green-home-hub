@@ -22,6 +22,9 @@ const Index = () => {
   const { 
     sensorData, 
     deviceStates, 
+    alerts,
+    loading,
+    error,
     isConnected, 
     connectionStatus,
     lastUpdate,
@@ -83,6 +86,12 @@ const Index = () => {
                 {connectionStatus === "connected" ? "Live" : connectionStatus === "connecting" ? "..." : "Off"}
               </span>
             </div>
+            {loading && (
+              <span className="text-xs text-muted-foreground hidden md:block">Syncing data...</span>
+            )}
+            {error && (
+              <span className="text-xs text-destructive hidden lg:block">{error}</span>
+            )}
             {lastUpdate && (
               <span className="text-[10px] sm:text-xs text-muted-foreground hidden md:block">
                 {lastUpdate.toLocaleTimeString()}
@@ -156,32 +165,32 @@ const Index = () => {
                 <DeviceControl
                   name="Living Room Lights"
                   icon={Lightbulb}
-                  isOn={deviceStates.lights}
-                  onToggle={() => toggleDevice("lights")}
+                  isOn={deviceStates.light}
+                  onToggle={() => void toggleDevice("light")}
                 />
                 <DeviceControl
                   name="Water Pump"
                   icon={Droplets}
-                  isOn={deviceStates.waterPump}
-                  onToggle={() => toggleDevice("waterPump")}
+                  isOn={deviceStates.pump}
+                  onToggle={() => void toggleDevice("pump")}
                 />
                 <DeviceControl
                   name="Exhaust Fan"
                   icon={Fan}
-                  isOn={deviceStates.exhaustFan}
-                  onToggle={() => toggleDevice("exhaustFan")}
+                  isOn={deviceStates.fan}
+                  onToggle={() => void toggleDevice("fan")}
                 />
                 <DeviceControl
                   name="Motion Detection"
                   icon={Eye}
                   isOn={deviceStates.motionDetection}
-                  onToggle={() => toggleDevice("motionDetection")}
+                  onToggle={() => void toggleDevice("motionDetection")}
                 />
               </div>
             </div>
 
             {/* Alerts */}
-            <AlertsPanel sensorData={sensorData} />
+            <AlertsPanel alerts={alerts} />
           </div>
         </div>
       </main>

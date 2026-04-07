@@ -105,8 +105,8 @@ const Gas = () => {
                     </div>
                   </div>
                   <Switch
-                    checked={deviceStates.exhaustFan}
-                    onCheckedChange={() => toggleDevice("exhaustFan")}
+                    checked={deviceStates.fan}
+                    onCheckedChange={() => void toggleDevice("fan")}
                   />
                 </div>
                 
@@ -120,7 +120,7 @@ const Gas = () => {
                   </div>
                   <Switch
                     checked={deviceStates.motionDetection}
-                    onCheckedChange={() => toggleDevice("motionDetection")}
+                    onCheckedChange={() => void toggleDevice("motionDetection")}
                   />
                 </div>
 
