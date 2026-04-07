@@ -19,7 +19,7 @@ export function MobileSidebarTrigger() {
       </SheetTrigger>
       <SheetContent 
         side="left" 
-        className="p-0 w-[280px] sm:w-[320px] md:w-[360px]"
+        className="w-[280px] overflow-hidden p-0 sm:w-[320px] md:w-[360px]"
       >
         <DashboardSidebar isMobile />
       </SheetContent>
