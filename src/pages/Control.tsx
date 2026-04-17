@@ -6,14 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 const Control = () => {
   const { deviceStates, toggleDevice } = useMQTTSimulation();
   const [brightness, setBrightness] = useState([75]);
   const [fanSpeed, setFanSpeed] = useState([50]);
 
-  const devices = [
+  const devices = useMemo(() => [
     { 
       id: "light" as const, 
       name: "Lights", 
@@ -52,7 +52,7 @@ const Control = () => {
       isOn: deviceStates.motionDetection,
       hasSlider: false
     },
-  ];
+  ], [deviceStates, brightness, fanSpeed]);
 
   return (
     <div className="flex min-h-screen w-full bg-background">

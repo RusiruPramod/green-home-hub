@@ -192,3 +192,10 @@ export const clearAlerts = async () => {
   checkFirebaseInit();
   await remove(ref(realtimeDb!, "alerts"));
 };
+
+// ESP32 LED Control - sends 1 (ON) or 0 (OFF)
+export const setLEDControl = async (state: boolean) => {
+  checkFirebaseInit();
+  const ledValue = state ? 1 : 0;
+  await set(ref(realtimeDb!, "led"), ledValue);
+};

@@ -5,6 +5,7 @@ import {
   listenSensors,
   pushAlert,
   updateDevice,
+  setLEDControl,
   type AlertRecord,
   type DevicesPayload,
 } from "@/services/realtimeDbService";
@@ -191,13 +192,31 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   const toggleDevice = useCallback(async (device: keyof DeviceStates) => {
     const firebaseDeviceId = deviceAliasMap[device];
     const currentState = deviceStates[device];
+    const newState = !currentState;
 
     try {
-      await updateDevice(firebaseDeviceId, !currentState);
+      // Optimistic state update for immediate UI feedback
+      setDeviceStates(prev => ({
+        ...prev,
+        [device]: newState,
+      }));
+
+      // Special handling for light device - also send to LED endpoint for ESP32
+      if (device === "light" || device === "lights") {
+        await setLEDControl(newState);
+      }
+      
+      await updateDevice(firebaseDeviceId, newState);
       setError(null);
     } catch (updateError) {
       const message = updateError instanceof Error ? updateError.message : "Failed to update device.";
       setError(message);
+      
+      // Revert optimistic update on error
+      setDeviceStates(prev => ({
+        ...prev,
+        [device]: currentState,
+      }));
     }
   }, [deviceStates]);
 
