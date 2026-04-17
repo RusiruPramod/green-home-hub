@@ -109,6 +109,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
 
       const offDevices = listenDevices(
         (data) => {
+          console.log("📡 Device state updated from Firebase:", data);
           setDeviceStates({
             light: data.light,
             pump: data.pump,
@@ -122,6 +123,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
           setError(null);
         },
         (listenerError) => {
+          console.error("❌ Device listener error:", listenerError);
           setError(listenerError.message || "Failed to listen to devices.");
         }
       );
@@ -194,22 +196,30 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     const currentState = deviceStates[device];
     const newState = !currentState;
 
+    console.log(`🔄 Toggle ${device}: ${currentState} → ${newState}`);
+
     try {
-      // Optimistic state update for immediate UI feedback
+      // Optimistic update for immediate UI feedback
       setDeviceStates(prev => ({
         ...prev,
         [device]: newState,
       }));
-
-      // Special handling for light device - also send to LED endpoint for ESP32
+      
+      // For light device, update both /led (ESP32) and /devices/light (sync)
       if (device === "light" || device === "lights") {
+        console.log(`⚡ Sending LED control: ${newState ? 1 : 0}`);
         await setLEDControl(newState);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to ensure Firebase processes
       }
       
+      // Update device state in Firebase
+      console.log(`💾 Updating Firebase device: ${firebaseDeviceId} = ${newState}`);
       await updateDevice(firebaseDeviceId, newState);
       setError(null);
+      
     } catch (updateError) {
       const message = updateError instanceof Error ? updateError.message : "Failed to update device.";
+      console.error(`❌ Toggle error:`, message);
       setError(message);
       
       // Revert optimistic update on error

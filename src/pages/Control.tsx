@@ -67,27 +67,46 @@ const Control = () => {
               <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Manage devices</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-muted/50">
-              <span className={`inline-block w-2 h-2 rounded-full ${deviceStates.light ? "bg-primary animate-pulse" : "bg-destructive"}`} />
-              <span className={`text-xs sm:text-sm font-medium ${deviceStates.light ? "text-primary" : "text-destructive"}`}>
-                {deviceStates.light ? "Live" : "Off"}
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Power className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">All OFF</span>
-              </Button>
-              <Button size="sm">
-                <Zap className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">All ON</span>
-              </Button>
-            </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">
+              <Power className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">All OFF</span>
+            </Button>
+            <Button size="sm">
+              <Zap className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">All ON</span>
+            </Button>
           </div>
         </header>
 
         <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
+          {/* Main LED Control Button */}
+          <div className="flex justify-center mb-6 sm:mb-8 md:mb-10">
+            <button
+              onClick={() => void toggleDevice("light")}
+              className={`group relative px-8 sm:px-12 md:px-16 py-6 sm:py-8 md:py-10 rounded-2xl font-bold text-lg sm:text-xl md:text-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-xl ${
+                deviceStates.light
+                  ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-green-500/50 hover:shadow-green-500/70"
+                  : "bg-gradient-to-r from-gray-300 to-gray-400 text-gray-700 shadow-gray-500/30"
+              }`}
+            >
+              {/* Animated background circle when ON */}
+              {deviceStates.light && (
+                <span className="absolute inset-0 rounded-2xl bg-green-400 opacity-20 animate-pulse"></span>
+              )}
+              
+              {/* Content */}
+              <span className="relative flex items-center gap-3 justify-center">
+                <Lightbulb className={`h-8 w-8 sm:h-10 sm:w-10 transition-transform ${deviceStates.light ? "animate-bounce" : ""}`} />
+                <div className="text-left">
+                  <div>{deviceStates.light ? "🟢 LIVE" : "⚫ OFF"}</div>
+                  <div className="text-xs sm:text-sm font-normal text-opacity-80">
+                    {deviceStates.light ? "LED Active" : "LED Inactive"}
+                  </div>
+                </div>
+              </span>
+            </button>
+          </div>
           {/* Quick Status */}
           <div className="grid gap-2 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-2 sm:grid-cols-4 xl:grid-cols-4">
             {devices.map((device) => (
