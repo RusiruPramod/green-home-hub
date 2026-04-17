@@ -67,15 +67,23 @@ const Control = () => {
               <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Manage devices</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Power className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">All OFF</span>
-            </Button>
-            <Button size="sm">
-              <Zap className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">All ON</span>
-            </Button>
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-muted/50">
+              <span className={`inline-block w-2 h-2 rounded-full ${deviceStates.light ? "bg-primary animate-pulse" : "bg-destructive"}`} />
+              <span className={`text-xs sm:text-sm font-medium ${deviceStates.light ? "text-primary" : "text-destructive"}`}>
+                {deviceStates.light ? "Live" : "Off"}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Power className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">All OFF</span>
+              </Button>
+              <Button size="sm">
+                <Zap className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">All ON</span>
+              </Button>
+            </div>
           </div>
         </header>
 

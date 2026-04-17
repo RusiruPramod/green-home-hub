@@ -86,6 +86,14 @@ const Index = () => {
                 {connectionStatus === "connected" ? "Live" : connectionStatus === "connecting" ? "..." : "Off"}
               </span>
             </div>
+            <div className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-2 sm:px-3 py-1 sm:py-1.5 ${
+              deviceStates.light ? "bg-primary/10" : "bg-muted/10"
+            }`}>
+              <span className={`inline-block w-2 h-2 rounded-full ${deviceStates.light ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
+              <span className={`text-xs sm:text-sm font-medium ${deviceStates.light ? "text-primary" : "text-muted-foreground"}`}>
+                {deviceStates.light ? "Light ON" : "Light OFF"}
+              </span>
+            </div>
             {loading && (
               <span className="text-xs text-muted-foreground hidden md:block">Syncing data...</span>
             )}
