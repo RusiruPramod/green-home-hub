@@ -193,9 +193,34 @@ export const clearAlerts = async () => {
   await remove(ref(realtimeDb!, "alerts"));
 };
 
+// Listen to LED status in real-time (syncs from ESP32 feedback)
+export const listenLEDStatus = (
+  onData: (state: boolean) => void,
+  onError?: (error: Error) => void
+): Unsubscribe => {
+  checkFirebaseInit();
+  const ledRef = ref(realtimeDb!, "led");
+
+  return onValue(
+    ledRef,
+    (snapshot) => {
+      const value = snapshot.val();
+      console.log("🔴 LED status from Firebase:", value);
+      // Handle both 1/0 (numbers) and true/false (booleans)
+      const isOn = value === 1 || value === true || value === "1" || value === "true";
+      console.log("✅ LED is:", isOn ? "ON" : "OFF");
+      onData(isOn);
+    },
+    (error) => {
+      onError?.(error);
+    }
+  );
+};
+
 // ESP32 LED Control - sends 1 (ON) or 0 (OFF)
 export const setLEDControl = async (state: boolean) => {
   checkFirebaseInit();
   const ledValue = state ? 1 : 0;
+  console.log("⚡ Setting LED to:", ledValue);
   await set(ref(realtimeDb!, "led"), ledValue);
 };

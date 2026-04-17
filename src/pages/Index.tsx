@@ -86,6 +86,25 @@ const Index = () => {
                 {connectionStatus === "connected" ? "Live" : connectionStatus === "connecting" ? "..." : "Off"}
               </span>
             </div>
+            {/* Real-time LED Status */}
+            <div className={`flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-300 ${
+              deviceStates.light 
+                ? "bg-green-500/15" 
+                : "bg-red-500/15"
+            }`}>
+              <span className={`inline-block w-2 h-2 rounded-full animate-pulse transition-all ${
+                deviceStates.light 
+                  ? "bg-green-500" 
+                  : "bg-red-500"
+              }`} />
+              <span className={`text-xs sm:text-sm font-bold transition-all ${
+                deviceStates.light 
+                  ? "text-green-600" 
+                  : "text-red-600"
+              }`}>
+                LED: {deviceStates.light ? "ON" : "OFF"}
+              </span>
+            </div>
             {loading && (
               <span className="text-xs text-muted-foreground hidden md:block">Syncing data...</span>
             )}

@@ -3,6 +3,7 @@ import {
   listenAlerts,
   listenDevices,
   listenSensors,
+  listenLEDStatus,
   pushAlert,
   updateDevice,
   setLEDControl,
@@ -128,6 +129,21 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
         }
       );
 
+      // Listen to LED status directly
+      const offLED = listenLEDStatus(
+        (ledState) => {
+          console.log("🟢 LED Update - Light state:", ledState);
+          setDeviceStates(prev => ({
+            ...prev,
+            light: ledState,
+            lights: ledState,
+          }));
+        },
+        (listenerError) => {
+          console.error("❌ LED listener error:", listenerError);
+        }
+      );
+
       const offAlerts = listenAlerts(
         (items) => {
           setAlerts(items);
@@ -140,6 +156,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
       return () => {
         offSensors();
         offDevices();
+        offLED();
         offAlerts();
       };
     } catch (initializationError) {
@@ -199,17 +216,11 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     console.log(`🔄 Toggle ${device}: ${currentState} → ${newState}`);
 
     try {
-      // Optimistic update for immediate UI feedback
-      setDeviceStates(prev => ({
-        ...prev,
-        [device]: newState,
-      }));
-      
-      // For light device, update both /led (ESP32) and /devices/light (sync)
+      // For light device, update /led (ESP32) 
       if (device === "light" || device === "lights") {
         console.log(`⚡ Sending LED control: ${newState ? 1 : 0}`);
         await setLEDControl(newState);
-        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to ensure Firebase processes
+        await new Promise(resolve => setTimeout(resolve, 200)); // Wait for Firebase sync
       }
       
       // Update device state in Firebase
@@ -221,12 +232,6 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
       const message = updateError instanceof Error ? updateError.message : "Failed to update device.";
       console.error(`❌ Toggle error:`, message);
       setError(message);
-      
-      // Revert optimistic update on error
-      setDeviceStates(prev => ({
-        ...prev,
-        [device]: currentState,
-      }));
     }
   }, [deviceStates]);
 

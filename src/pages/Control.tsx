@@ -67,15 +67,36 @@ const Control = () => {
               <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Manage devices</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Power className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">All OFF</span>
-            </Button>
-            <Button size="sm">
-              <Zap className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">All ON</span>
-            </Button>
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            {/* Real-time LED Status */}
+            <div className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border transition-all duration-300 ${
+              deviceStates.light 
+                ? "bg-green-500/15 border-green-500/50" 
+                : "bg-red-500/15 border-red-500/50"
+            }`}>
+              <span className={`inline-block w-2 h-2 rounded-full animate-pulse transition-all ${
+                deviceStates.light 
+                  ? "bg-green-500" 
+                  : "bg-red-500"
+              }`} />
+              <span className={`text-xs sm:text-sm font-bold transition-all ${
+                deviceStates.light 
+                  ? "text-green-600" 
+                  : "text-red-600"
+              }`}>
+                LED: {deviceStates.light ? "ON" : "OFF"}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Power className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">All OFF</span>
+              </Button>
+              <Button size="sm">
+                <Zap className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">All ON</span>
+              </Button>
+            </div>
           </div>
         </header>
 
