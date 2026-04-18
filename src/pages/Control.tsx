@@ -69,22 +69,22 @@ const Control = () => {
           </div>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
             {/* Single Live Button with LED Indicator - Early Style */}
-            <div className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border-2 transition-all duration-300 shadow-lg ${
+            <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all duration-300 shadow-lg ${
               deviceStates.light 
-                ? "bg-green-500/20 border-green-500/70 shadow-green-500/40" 
-                : "bg-blue-500/20 border-blue-500/70 shadow-blue-500/40"
+                ? "bg-green-500/20 border-green-500/70" 
+                : "bg-blue-500/20 border-blue-500/70"
             }`}>
               <span className={`inline-block w-2.5 h-2.5 rounded-full animate-pulse transition-all ${
                 deviceStates.light 
                   ? "bg-green-500 shadow-md shadow-green-500/60" 
                   : "bg-blue-500 shadow-md shadow-blue-500/60"
               }`} />
-              <span className={`text-xs sm:text-sm font-bold transition-all ${
+              <span className={`text-xs font-bold transition-all ${
                 deviceStates.light 
                   ? "text-green-600" 
                   : "text-blue-600"
               }`}>
-                ● Live
+                Live
               </span>
             </div>
             <div className="flex gap-2">

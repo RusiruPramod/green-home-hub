@@ -85,12 +85,12 @@ const Analytics = () => {
               <CardTitle className="flex items-center gap-2 text-sm sm:text-base md:text-lg">
                 <Gauge className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
                 Live Sensors
-                <span className={`ml-auto text-[10px] sm:text-xs px-2 py-1 rounded-full ${
+                <span className={`ml-auto text-[11px] px-3 py-1.5 rounded-full ${
                   connectionStatus === "connected" 
                     ? "bg-success/10 text-success" 
                     : "bg-muted text-muted-foreground"
                 }`}>
-                  {connectionStatus === "connected" ? "● Live" : "..."}
+                  {connectionStatus === "connected" ? "●Live" : "..."}
                 </span>
               </CardTitle>
             </CardHeader>
