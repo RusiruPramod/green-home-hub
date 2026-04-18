@@ -62,47 +62,23 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-            <div className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-2 sm:px-3 py-1 sm:py-1.5 ${
-              connectionStatus === "connected" 
-                ? "bg-success/10" 
-                : connectionStatus === "connecting"
-                ? "bg-warning/10"
-                : "bg-destructive/10"
-            }`}>
-              <span className={`status-indicator ${
-                connectionStatus === "connected" 
-                  ? "status-online" 
-                  : connectionStatus === "connecting"
-                  ? "status-warning"
-                  : "status-offline"
-              }`} />
-              <span className={`text-xs sm:text-sm font-medium ${
-                connectionStatus === "connected" 
-                  ? "text-success" 
-                  : connectionStatus === "connecting"
-                  ? "text-warning"
-                  : "text-destructive"
-              }`}>
-                {connectionStatus === "connected" ? "Live" : connectionStatus === "connecting" ? "..." : "Off"}
-              </span>
-            </div>
-            {/* Real-time LED Status */}
-            <div className={`flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-300 ${
+            {/* Single Live Button with LED Indicator - Early Style */}
+            <div className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border-2 transition-all duration-300 shadow-lg ${
               deviceStates.light 
-                ? "bg-green-500/15" 
-                : "bg-red-500/15"
+                ? "bg-green-500/20 border-green-500/70 shadow-green-500/40" 
+                : "bg-blue-500/20 border-blue-500/70 shadow-blue-500/40"
             }`}>
-              <span className={`inline-block w-2 h-2 rounded-full animate-pulse transition-all ${
+              <span className={`inline-block w-2.5 h-2.5 rounded-full animate-pulse transition-all ${
                 deviceStates.light 
-                  ? "bg-green-500" 
-                  : "bg-red-500"
+                  ? "bg-green-500 shadow-md shadow-green-500/60" 
+                  : "bg-blue-500 shadow-md shadow-blue-500/60"
               }`} />
               <span className={`text-xs sm:text-sm font-bold transition-all ${
                 deviceStates.light 
                   ? "text-green-600" 
-                  : "text-red-600"
+                  : "text-blue-600"
               }`}>
-                LED: {deviceStates.light ? "ON" : "OFF"}
+                ● Live
               </span>
             </div>
             {loading && (
