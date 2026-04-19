@@ -28,7 +28,9 @@ const Index = () => {
     isConnected, 
     connectionStatus,
     lastUpdate,
-    toggleDevice 
+    toggleDevice,
+    ledStatus,
+    ledError
   } = useMQTTSimulation();
 
   // Calculate trends based on previous values (simplified for demo)
@@ -62,22 +64,74 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-            {/* Single Live Button with LED Indicator - Early Style */}
-            <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all duration-300 shadow-lg ${
-              deviceStates.light 
-                ? "bg-green-500/20 border-green-500/70" 
-                : "bg-blue-500/20 border-blue-500/70"
-            }`}>
-              <span className={`inline-block w-2.5 h-2.5 rounded-full animate-pulse transition-all ${
-                deviceStates.light 
-                  ? "bg-green-500 shadow-md shadow-green-500/60" 
-                  : "bg-blue-500 shadow-md shadow-blue-500/60"
-              }`} />
-              <span className={`text-xs font-bold transition-all ${
-                deviceStates.light 
-                  ? "text-green-600" 
-                  : "text-blue-600"
-              }`}>
+            {/* LED Status Indicator (Firebase Real-time LED value) */}
+            <div 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                paddingLeft: '16px',
+                paddingRight: '16px',
+                paddingTop: '6px',
+                paddingBottom: '6px',
+                borderRadius: '9999px',
+                border: '1px solid',
+                transition: 'all 300ms ease',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                backgroundColor: ledError 
+                  ? 'rgba(239, 68, 68, 0.2)' 
+                  : ledStatus === 1 
+                  ? 'rgba(34, 197, 94, 0.2)'
+                  : ledStatus === 0 
+                  ? 'rgba(59, 130, 246, 0.2)'
+                  : 'rgba(234, 179, 8, 0.2)',
+                borderColor: ledError
+                  ? 'rgba(239, 68, 68, 0.7)'
+                  : ledStatus === 1
+                  ? 'rgba(34, 197, 94, 0.7)'
+                  : ledStatus === 0
+                  ? 'rgba(59, 130, 246, 0.7)'
+                  : 'rgba(234, 179, 8, 0.7)',
+              }}
+            >
+              <span 
+                style={{
+                  display: 'inline-block',
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  transition: 'all 300ms ease',
+                  backgroundColor: ledError
+                    ? 'rgb(239, 68, 68)'
+                    : ledStatus === 1
+                    ? 'rgb(34, 197, 94)'
+                    : ledStatus === 0
+                    ? 'rgb(59, 130, 246)'
+                    : 'rgb(234, 179, 8)',
+                  boxShadow: ledError
+                    ? '0 0 10px rgba(239, 68, 68, 0.6)'
+                    : ledStatus === 1
+                    ? '0 0 10px rgba(34, 197, 94, 0.6)'
+                    : ledStatus === 0
+                    ? '0 0 10px rgba(59, 130, 246, 0.6)'
+                    : '0 0 10px rgba(234, 179, 8, 0.6)',
+                }} 
+              />
+              <span 
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 300ms ease',
+                  color: ledError
+                    ? 'rgb(220, 38, 38)'
+                    : ledStatus === 1
+                    ? 'rgb(22, 163, 74)'
+                    : ledStatus === 0
+                    ? 'rgb(37, 99, 235)'
+                    : 'rgb(161, 98, 7)',
+                }}
+              >
                 Live
               </span>
             </div>

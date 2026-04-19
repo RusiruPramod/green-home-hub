@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { useState, useMemo } from "react";
 
 const Control = () => {
-  const { deviceStates, toggleDevice } = useMQTTSimulation();
+  const { deviceStates, toggleDevice, ledStatus, ledError } = useMQTTSimulation();
   const [brightness, setBrightness] = useState([75]);
   const [fanSpeed, setFanSpeed] = useState([50]);
 
@@ -68,22 +68,74 @@ const Control = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-            {/* Single Live Button with LED Indicator - Early Style */}
-            <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all duration-300 shadow-lg ${
-              deviceStates.light 
-                ? "bg-green-500/20 border-green-500/70" 
-                : "bg-blue-500/20 border-blue-500/70"
-            }`}>
-              <span className={`inline-block w-2.5 h-2.5 rounded-full animate-pulse transition-all ${
-                deviceStates.light 
-                  ? "bg-green-500 shadow-md shadow-green-500/60" 
-                  : "bg-blue-500 shadow-md shadow-blue-500/60"
-              }`} />
-              <span className={`text-xs font-bold transition-all ${
-                deviceStates.light 
-                  ? "text-green-600" 
-                  : "text-blue-600"
-              }`}>
+            {/* LED Status Indicator (Firebase Real-time LED value) */}
+            <div 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                paddingLeft: '16px',
+                paddingRight: '16px',
+                paddingTop: '6px',
+                paddingBottom: '6px',
+                borderRadius: '9999px',
+                border: '1px solid',
+                transition: 'all 300ms ease',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                backgroundColor: ledError 
+                  ? 'rgba(239, 68, 68, 0.2)' 
+                  : ledStatus === 1 
+                  ? 'rgba(34, 197, 94, 0.2)'
+                  : ledStatus === 0 
+                  ? 'rgba(59, 130, 246, 0.2)'
+                  : 'rgba(234, 179, 8, 0.2)',
+                borderColor: ledError
+                  ? 'rgba(239, 68, 68, 0.7)'
+                  : ledStatus === 1
+                  ? 'rgba(34, 197, 94, 0.7)'
+                  : ledStatus === 0
+                  ? 'rgba(59, 130, 246, 0.7)'
+                  : 'rgba(234, 179, 8, 0.7)',
+              }}
+            >
+              <span 
+                style={{
+                  display: 'inline-block',
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  transition: 'all 300ms ease',
+                  backgroundColor: ledError
+                    ? 'rgb(239, 68, 68)'
+                    : ledStatus === 1
+                    ? 'rgb(34, 197, 94)'
+                    : ledStatus === 0
+                    ? 'rgb(59, 130, 246)'
+                    : 'rgb(234, 179, 8)',
+                  boxShadow: ledError
+                    ? '0 0 10px rgba(239, 68, 68, 0.6)'
+                    : ledStatus === 1
+                    ? '0 0 10px rgba(34, 197, 94, 0.6)'
+                    : ledStatus === 0
+                    ? '0 0 10px rgba(59, 130, 246, 0.6)'
+                    : '0 0 10px rgba(234, 179, 8, 0.6)',
+                }} 
+              />
+              <span 
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 300ms ease',
+                  color: ledError
+                    ? 'rgb(220, 38, 38)'
+                    : ledStatus === 1
+                    ? 'rgb(22, 163, 74)'
+                    : ledStatus === 0
+                    ? 'rgb(37, 99, 235)'
+                    : 'rgb(161, 98, 7)',
+                }}
+              >
                 Live
               </span>
             </div>
@@ -101,33 +153,6 @@ const Control = () => {
         </header>
 
         <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
-          {/* Main LED Control Button */}
-          <div className="flex justify-center mb-6 sm:mb-8 md:mb-10">
-            <button
-              onClick={() => void toggleDevice("light")}
-              className={`group relative px-8 sm:px-12 md:px-16 py-6 sm:py-8 md:py-10 rounded-2xl font-bold text-lg sm:text-xl md:text-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-xl ${
-                deviceStates.light
-                  ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-green-500/50 hover:shadow-green-500/70"
-                  : "bg-gradient-to-r from-gray-300 to-gray-400 text-gray-700 shadow-gray-500/30"
-              }`}
-            >
-              {/* Animated background circle when ON */}
-              {deviceStates.light && (
-                <span className="absolute inset-0 rounded-2xl bg-green-400 opacity-20 animate-pulse"></span>
-              )}
-              
-              {/* Content */}
-              <span className="relative flex items-center gap-3 justify-center">
-                <Lightbulb className={`h-8 w-8 sm:h-10 sm:w-10 transition-transform ${deviceStates.light ? "animate-bounce" : ""}`} />
-                <div className="text-left">
-                  <div>{deviceStates.light ? "🟢 LIVE" : "⚫ OFF"}</div>
-                  <div className="text-xs sm:text-sm font-normal text-opacity-80">
-                    {deviceStates.light ? "LED Active" : "LED Inactive"}
-                  </div>
-                </div>
-              </span>
-            </button>
-          </div>
           {/* Quick Status */}
           <div className="grid gap-2 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-2 sm:grid-cols-4 xl:grid-cols-4">
             {devices.map((device) => (

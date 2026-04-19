@@ -43,6 +43,8 @@ interface MQTTSimulationReturn {
   connectionStatus: "connected" | "connecting" | "disconnected";
   lastUpdate: Date | null;
   toggleDevice: (device: keyof DeviceStates) => Promise<void>;
+  ledStatus: 0 | 1 | null;
+  ledError: string | null;
 }
 
 const deviceAliasMap: Record<keyof DeviceStates, keyof Omit<DevicesPayload, "updatedAt">> = {
@@ -82,6 +84,8 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isSensorReady, setIsSensorReady] = useState(false);
   const [isDeviceReady, setIsDeviceReady] = useState(false);
+  const [ledStatus, setLedStatus] = useState<0 | 1 | null>(null);
+  const [ledError, setLedError] = useState<string | null>(null);
   const thresholdsRef = useRef({ gasDangerActive: false, waterLowActive: false });
 
   useEffect(() => {
@@ -129,18 +133,18 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
         }
       );
 
-      // Listen to LED status directly
+      // Listen to LED status for the indicator only (0 or 1)
+      // Does NOT affect light switch control
       const offLED = listenLEDStatus(
         (ledState) => {
-          console.log("🟢 LED Update - Light state:", ledState);
-          setDeviceStates(prev => ({
-            ...prev,
-            light: ledState,
-            lights: ledState,
-          }));
+          console.log("🔴 LED indicator update:", ledState ? 1 : 0);
+          setLedStatus(ledState ? 1 : 0);
+          setLedError(null);
         },
         (listenerError) => {
           console.error("❌ LED listener error:", listenerError);
+          setLedError(listenerError.message || "LED connection error");
+          setLedStatus(null);
         }
       );
 
@@ -251,5 +255,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     connectionStatus,
     lastUpdate,
     toggleDevice,
+    ledStatus,
+    ledError,
   };
 }
