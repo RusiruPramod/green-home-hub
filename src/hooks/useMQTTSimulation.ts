@@ -45,6 +45,7 @@ interface MQTTSimulationReturn {
   toggleDevice: (device: keyof DeviceStates) => Promise<void>;
   ledStatus: 0 | 1 | null;
   ledError: string | null;
+  togglingDevices: Set<string>;
 }
 
 const deviceAliasMap: Record<keyof DeviceStates, keyof Omit<DevicesPayload, "updatedAt">> = {
@@ -86,7 +87,9 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   const [isDeviceReady, setIsDeviceReady] = useState(false);
   const [ledStatus, setLedStatus] = useState<0 | 1 | null>(null);
   const [ledError, setLedError] = useState<string | null>(null);
+  const [togglingDevices, setTogglingDevices] = useState<Set<string>>(new Set());
   const thresholdsRef = useRef({ gasDangerActive: false, waterLowActive: false });
+  const toggleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     try {
@@ -213,6 +216,12 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   }, [sensorData.gas, sensorData.water]);
 
   const toggleDevice = useCallback(async (device: keyof DeviceStates) => {
+    // Prevent rapid consecutive clicks on same device
+    setTogglingDevices(prev => {
+      if (prev.has(device)) return prev;
+      return new Set([...prev, device]);
+    });
+
     const firebaseDeviceId = deviceAliasMap[device];
     const currentState = deviceStates[device];
     const newState = !currentState;
@@ -224,7 +233,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
       if (device === "light" || device === "lights") {
         console.log(`⚡ Sending LED control: ${newState ? 1 : 0}`);
         await setLEDControl(newState);
-        await new Promise(resolve => setTimeout(resolve, 200)); // Wait for Firebase sync
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       // Update device state in Firebase
@@ -236,6 +245,16 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
       const message = updateError instanceof Error ? updateError.message : "Failed to update device.";
       console.error(`❌ Toggle error:`, message);
       setError(message);
+    } finally {
+      // Clear toggling state after minimum time
+      if (toggleTimeoutRef.current) clearTimeout(toggleTimeoutRef.current);
+      toggleTimeoutRef.current = setTimeout(() => {
+        setTogglingDevices(prev => {
+          const next = new Set(prev);
+          next.delete(device);
+          return next;
+        });
+      }, 300);
     }
   }, [deviceStates]);
 
@@ -244,6 +263,13 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     : loading
     ? "connecting"
     : "connected";
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (toggleTimeoutRef.current) clearTimeout(toggleTimeoutRef.current);
+    };
+  }, []);
 
   return {
     sensorData,
@@ -257,5 +283,6 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     toggleDevice,
     ledStatus,
     ledError,
+    togglingDevices,
   };
 }

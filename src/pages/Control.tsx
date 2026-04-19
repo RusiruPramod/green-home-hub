@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { useState, useMemo } from "react";
 
 const Control = () => {
-  const { deviceStates, toggleDevice, ledStatus, ledError } = useMQTTSimulation();
+  const { deviceStates, toggleDevice, ledStatus, ledError, togglingDevices } = useMQTTSimulation();
   const [brightness, setBrightness] = useState([75]);
   const [fanSpeed, setFanSpeed] = useState([50]);
 
@@ -158,8 +158,8 @@ const Control = () => {
             {devices.map((device) => (
               <Card 
                 key={device.id}
-                className={`cursor-pointer transition-all ${device.isOn ? "ring-2 ring-primary bg-primary/5" : ""}`}
-                onClick={() => void toggleDevice(device.id)}
+                className={`cursor-pointer transition-all select-none ${togglingDevices.has(device.id) ? "opacity-75 cursor-not-allowed" : ""} ${device.isOn ? "ring-2 ring-primary bg-primary/5" : ""}`}
+                onClick={() => !togglingDevices.has(device.id) && void toggleDevice(device.id)}
               >
                 <CardContent className="flex flex-col items-center justify-center py-4 sm:py-6">
                   <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full ${device.isOn ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
@@ -193,6 +193,7 @@ const Control = () => {
                     </div>
                     <Switch
                       checked={device.isOn}
+                      disabled={togglingDevices.has(device.id)}
                       onCheckedChange={() => void toggleDevice(device.id)}
                       className="scale-110 sm:scale-125"
                     />

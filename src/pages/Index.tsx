@@ -30,7 +30,8 @@ const Index = () => {
     lastUpdate,
     toggleDevice,
     ledStatus,
-    ledError
+    ledError,
+    togglingDevices
   } = useMQTTSimulation();
 
   // Calculate trends based on previous values (simplified for demo)
@@ -215,24 +216,28 @@ const Index = () => {
                   name="Living Room Lights"
                   icon={Lightbulb}
                   isOn={deviceStates.light}
+                  isToggling={togglingDevices.has("light")}
                   onToggle={() => void toggleDevice("light")}
                 />
                 <DeviceControl
                   name="Water Pump"
                   icon={Droplets}
                   isOn={deviceStates.pump}
+                  isToggling={togglingDevices.has("pump")}
                   onToggle={() => void toggleDevice("pump")}
                 />
                 <DeviceControl
                   name="Exhaust Fan"
                   icon={Fan}
                   isOn={deviceStates.fan}
+                  isToggling={togglingDevices.has("fan")}
                   onToggle={() => void toggleDevice("fan")}
                 />
                 <DeviceControl
                   name="Motion Detection"
                   icon={Eye}
                   isOn={deviceStates.motionDetection}
+                  isToggling={togglingDevices.has("motionDetection")}
                   onToggle={() => void toggleDevice("motionDetection")}
                 />
               </div>
