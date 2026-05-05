@@ -13,6 +13,7 @@ import {
   Server,
 } from "lucide-react";
 import { useState } from "react";
+import { useMQTTSimulation } from "@/hooks/useMQTTSimulation";
 import { cn } from "@/lib/utils";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -31,6 +32,7 @@ const navItems = [
 export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { ledStatus } = useMQTTSimulation();
 
   return (
     <aside
@@ -111,7 +113,13 @@ export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
         >
           <div className="relative">
             <Wifi className={cn("text-sidebar-primary", isMobile ? "h-5 w-5 sm:h-6 sm:w-6" : "h-5 w-5 sm:h-6 sm:w-6")} />
-            <span className={cn("absolute -bottom-0.5 -right-0.5 rounded-full bg-success ring-2 ring-sidebar", isMobile ? "h-2 w-2 sm:h-2.5 sm:w-2.5" : "h-2 w-2 sm:h-2.5 sm:w-2.5")} />
+            <span
+              className={cn(
+                "absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-sidebar",
+                ledStatus === 1 ? "bg-success animate-blink-fast-dot" : "bg-success",
+                isMobile ? "h-2 w-2 sm:h-2.5 sm:w-2.5" : "h-2 w-2 sm:h-2.5 sm:w-2.5"
+              )}
+            />
           </div>
           {(!collapsed || isMobile) && (
             <div className="flex-1">
