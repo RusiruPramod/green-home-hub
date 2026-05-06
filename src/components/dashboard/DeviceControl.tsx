@@ -6,6 +6,7 @@ interface DeviceControlProps {
   icon: LucideIcon;
   isOn: boolean;
   onToggle: () => void;
+  isToggling?: boolean;
 }
 
 export function DeviceControl({
@@ -13,9 +14,10 @@ export function DeviceControl({
   icon: Icon,
   isOn,
   onToggle,
+  isToggling = false,
 }: DeviceControlProps) {
   return (
-    <div className={`sensor-card flex items-center justify-between transition-all ${isOn ? 'ring-2 ring-primary/20' : ''}`}>
+    <div className={`sensor-card flex items-center justify-between transition-all select-none ${isToggling ? "opacity-75 cursor-not-allowed" : ""}`}>
       <div className="flex items-center gap-3">
         <div className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
           isOn ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
@@ -31,6 +33,7 @@ export function DeviceControl({
       </div>
       <Switch
         checked={isOn}
+        disabled={isToggling}
         onCheckedChange={onToggle}
         className="data-[state=checked]:bg-primary"
       />

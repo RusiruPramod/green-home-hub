@@ -22,10 +22,16 @@ const Index = () => {
   const { 
     sensorData, 
     deviceStates, 
+    alerts,
+    loading,
+    error,
     isConnected, 
     connectionStatus,
     lastUpdate,
-    toggleDevice 
+    toggleDevice,
+    ledStatus,
+    ledError,
+    togglingDevices
   } = useMQTTSimulation();
 
   // Calculate trends based on previous values (simplified for demo)
@@ -59,30 +65,83 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-            <div className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-2 sm:px-3 py-1 sm:py-1.5 ${
-              connectionStatus === "connected" 
-                ? "bg-success/10" 
-                : connectionStatus === "connecting"
-                ? "bg-warning/10"
-                : "bg-destructive/10"
-            }`}>
-              <span className={`status-indicator ${
-                connectionStatus === "connected" 
-                  ? "status-online" 
-                  : connectionStatus === "connecting"
-                  ? "status-warning"
-                  : "status-offline"
-              }`} />
-              <span className={`text-xs sm:text-sm font-medium ${
-                connectionStatus === "connected" 
-                  ? "text-success" 
-                  : connectionStatus === "connecting"
-                  ? "text-warning"
-                  : "text-destructive"
-              }`}>
-                {connectionStatus === "connected" ? "Live" : connectionStatus === "connecting" ? "..." : "Off"}
+            {/* LED Status Indicator (Firebase Real-time LED value) */}
+            <div 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                paddingLeft: '16px',
+                paddingRight: '16px',
+                paddingTop: '6px',
+                paddingBottom: '6px',
+                borderRadius: '9999px',
+                border: '1px solid',
+                transition: 'all 300ms ease',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                backgroundColor: ledError 
+                  ? 'rgba(239, 68, 68, 0.2)' 
+                  : ledStatus === 1 
+                  ? 'rgba(34, 197, 94, 0.2)'
+                  : ledStatus === 0 
+                  ? 'rgba(59, 130, 246, 0.2)'
+                  : 'rgba(234, 179, 8, 0.2)',
+                borderColor: ledError
+                  ? 'rgba(239, 68, 68, 0.7)'
+                  : ledStatus === 1
+                  ? 'rgba(34, 197, 94, 0.7)'
+                  : ledStatus === 0
+                  ? 'rgba(59, 130, 246, 0.7)'
+                  : 'rgba(234, 179, 8, 0.7)',
+              }}
+            >
+              <span 
+                style={{
+                  display: 'inline-block',
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  transition: 'all 300ms ease',
+                  backgroundColor: ledError
+                    ? 'rgb(239, 68, 68)'
+                    : ledStatus === 1
+                    ? 'rgb(34, 197, 94)'
+                    : ledStatus === 0
+                    ? 'rgb(59, 130, 246)'
+                    : 'rgb(234, 179, 8)',
+                  boxShadow: ledError
+                    ? '0 0 10px rgba(239, 68, 68, 0.6)'
+                    : ledStatus === 1
+                    ? '0 0 10px rgba(34, 197, 94, 0.6)'
+                    : ledStatus === 0
+                    ? '0 0 10px rgba(59, 130, 246, 0.6)'
+                    : '0 0 10px rgba(234, 179, 8, 0.6)',
+                }} 
+              />
+              <span 
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 300ms ease',
+                  color: ledError
+                    ? 'rgb(220, 38, 38)'
+                    : ledStatus === 1
+                    ? 'rgb(22, 163, 74)'
+                    : ledStatus === 0
+                    ? 'rgb(37, 99, 235)'
+                    : 'rgb(161, 98, 7)',
+                }}
+              >
+                Live
               </span>
             </div>
+            {loading && (
+              <span className="text-xs text-muted-foreground hidden md:block">Syncing data...</span>
+            )}
+            {error && (
+              <span className="text-xs text-destructive hidden lg:block">{error}</span>
+            )}
             {lastUpdate && (
               <span className="text-[10px] sm:text-xs text-muted-foreground hidden md:block">
                 {lastUpdate.toLocaleTimeString()}
@@ -156,32 +215,36 @@ const Index = () => {
                 <DeviceControl
                   name="Living Room Lights"
                   icon={Lightbulb}
-                  isOn={deviceStates.lights}
-                  onToggle={() => toggleDevice("lights")}
+                  isOn={deviceStates.light}
+                  isToggling={togglingDevices.has("light")}
+                  onToggle={() => void toggleDevice("light")}
                 />
                 <DeviceControl
                   name="Water Pump"
                   icon={Droplets}
-                  isOn={deviceStates.waterPump}
-                  onToggle={() => toggleDevice("waterPump")}
+                  isOn={deviceStates.pump}
+                  isToggling={togglingDevices.has("pump")}
+                  onToggle={() => void toggleDevice("pump")}
                 />
                 <DeviceControl
                   name="Exhaust Fan"
                   icon={Fan}
-                  isOn={deviceStates.exhaustFan}
-                  onToggle={() => toggleDevice("exhaustFan")}
+                  isOn={deviceStates.fan}
+                  isToggling={togglingDevices.has("fan")}
+                  onToggle={() => void toggleDevice("fan")}
                 />
                 <DeviceControl
                   name="Motion Detection"
                   icon={Eye}
                   isOn={deviceStates.motionDetection}
-                  onToggle={() => toggleDevice("motionDetection")}
+                  isToggling={togglingDevices.has("motionDetection")}
+                  onToggle={() => void toggleDevice("motionDetection")}
                 />
               </div>
             </div>
 
             {/* Alerts */}
-            <AlertsPanel sensorData={sensorData} />
+            <AlertsPanel alerts={alerts} />
           </div>
         </div>
       </main>

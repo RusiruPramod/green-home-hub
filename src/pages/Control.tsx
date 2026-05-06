@@ -6,39 +6,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 const Control = () => {
-  const { deviceStates, toggleDevice } = useMQTTSimulation();
+  const { deviceStates, toggleDevice, ledStatus, ledError, togglingDevices } = useMQTTSimulation();
   const [brightness, setBrightness] = useState([75]);
   const [fanSpeed, setFanSpeed] = useState([50]);
 
-  const devices = [
+  const devices = useMemo(() => [
     { 
-      id: "lights" as const, 
+      id: "light" as const, 
       name: "Lights", 
       fullName: "Living Room Lights",
       icon: Lightbulb, 
-      isOn: deviceStates.lights,
+      isOn: deviceStates.light,
       hasSlider: true,
       sliderValue: brightness,
       setSliderValue: setBrightness,
       sliderLabel: "Brightness"
     },
     { 
-      id: "waterPump" as const, 
+      id: "pump" as const, 
       name: "Pump", 
       fullName: "Water Pump",
       icon: Droplets, 
-      isOn: deviceStates.waterPump,
+      isOn: deviceStates.pump,
       hasSlider: false
     },
     { 
-      id: "exhaustFan" as const, 
+      id: "fan" as const, 
       name: "Fan", 
       fullName: "Exhaust Fan",
       icon: Fan, 
-      isOn: deviceStates.exhaustFan,
+      isOn: deviceStates.fan,
       hasSlider: true,
       sliderValue: fanSpeed,
       setSliderValue: setFanSpeed,
@@ -52,7 +52,7 @@ const Control = () => {
       isOn: deviceStates.motionDetection,
       hasSlider: false
     },
-  ];
+  ], [deviceStates, brightness, fanSpeed]);
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -67,15 +67,88 @@ const Control = () => {
               <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Manage devices</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Power className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">All OFF</span>
-            </Button>
-            <Button size="sm">
-              <Zap className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">All ON</span>
-            </Button>
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            {/* LED Status Indicator (Firebase Real-time LED value) */}
+            <div 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                paddingLeft: '16px',
+                paddingRight: '16px',
+                paddingTop: '6px',
+                paddingBottom: '6px',
+                borderRadius: '9999px',
+                border: '1px solid',
+                transition: 'all 300ms ease',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                backgroundColor: ledError 
+                  ? 'rgba(239, 68, 68, 0.2)' 
+                  : ledStatus === 1 
+                  ? 'rgba(34, 197, 94, 0.2)'
+                  : ledStatus === 0 
+                  ? 'rgba(59, 130, 246, 0.2)'
+                  : 'rgba(234, 179, 8, 0.2)',
+                borderColor: ledError
+                  ? 'rgba(239, 68, 68, 0.7)'
+                  : ledStatus === 1
+                  ? 'rgba(34, 197, 94, 0.7)'
+                  : ledStatus === 0
+                  ? 'rgba(59, 130, 246, 0.7)'
+                  : 'rgba(234, 179, 8, 0.7)',
+              }}
+            >
+              <span 
+                style={{
+                  display: 'inline-block',
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  transition: 'all 300ms ease',
+                  backgroundColor: ledError
+                    ? 'rgb(239, 68, 68)'
+                    : ledStatus === 1
+                    ? 'rgb(34, 197, 94)'
+                    : ledStatus === 0
+                    ? 'rgb(59, 130, 246)'
+                    : 'rgb(234, 179, 8)',
+                  boxShadow: ledError
+                    ? '0 0 10px rgba(239, 68, 68, 0.6)'
+                    : ledStatus === 1
+                    ? '0 0 10px rgba(34, 197, 94, 0.6)'
+                    : ledStatus === 0
+                    ? '0 0 10px rgba(59, 130, 246, 0.6)'
+                    : '0 0 10px rgba(234, 179, 8, 0.6)',
+                }} 
+              />
+              <span 
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 300ms ease',
+                  color: ledError
+                    ? 'rgb(220, 38, 38)'
+                    : ledStatus === 1
+                    ? 'rgb(22, 163, 74)'
+                    : ledStatus === 0
+                    ? 'rgb(37, 99, 235)'
+                    : 'rgb(161, 98, 7)',
+                }}
+              >
+                Live
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Power className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">All OFF</span>
+              </Button>
+              <Button size="sm">
+                <Zap className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">All ON</span>
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -85,8 +158,8 @@ const Control = () => {
             {devices.map((device) => (
               <Card 
                 key={device.id}
-                className={`cursor-pointer transition-all ${device.isOn ? "ring-2 ring-primary bg-primary/5" : ""}`}
-                onClick={() => toggleDevice(device.id)}
+                className={`cursor-pointer transition-all select-none ${togglingDevices.has(device.id) ? "opacity-75 cursor-not-allowed" : ""} ${device.isOn ? "ring-2 ring-primary bg-primary/5" : ""}`}
+                onClick={() => !togglingDevices.has(device.id) && void toggleDevice(device.id)}
               >
                 <CardContent className="flex flex-col items-center justify-center py-4 sm:py-6">
                   <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full ${device.isOn ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
@@ -120,7 +193,8 @@ const Control = () => {
                     </div>
                     <Switch
                       checked={device.isOn}
-                      onCheckedChange={() => toggleDevice(device.id)}
+                      disabled={togglingDevices.has(device.id)}
+                      onCheckedChange={() => void toggleDevice(device.id)}
                       className="scale-110 sm:scale-125"
                     />
                   </div>

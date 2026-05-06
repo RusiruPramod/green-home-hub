@@ -4,41 +4,80 @@ import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigge
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  acknowledgeAlert,
+  clearAlerts,
+  deleteAlert,
+  listenAlerts,
+  type AlertRecord,
+} from "@/services/realtimeDbService";
 
-interface Alert {
-  id: string;
-  type: "danger" | "warning" | "info" | "success";
-  title: string;
-  message: string;
-  time: string;
-  acknowledged: boolean;
-}
+const getRelativeTime = (timestamp?: number) => {
+  if (!timestamp) return "Just now";
+
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return "Just now";
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+
+  const days = Math.floor(hours / 24);
+  return `${days} day ago`;
+};
 
 const Alerts = () => {
-  const [alerts, setAlerts] = useState<Alert[]>([
-    { id: "1", type: "danger", title: "High Gas Level", message: "Gas exceeded 450 ppm", time: "2 min ago", acknowledged: false },
-    { id: "2", type: "warning", title: "Low Water", message: "Tank below 25%", time: "15 min ago", acknowledged: false },
-    { id: "3", type: "info", title: "Motion", message: "PIR triggered", time: "30 min ago", acknowledged: true },
-    { id: "4", type: "success", title: "Online", message: "All sensors connected", time: "1 hour ago", acknowledged: true },
-    { id: "5", type: "warning", title: "Power Surge", message: "Voltage spike: 248V", time: "2 hours ago", acknowledged: true },
-  ]);
+  const [alerts, setAlerts] = useState<AlertRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const [filter, setFilter] = useState<"all" | "danger" | "warning" | "info" | "success">("all");
 
-  const acknowledgeAlert = (id: string) => {
-    setAlerts(alerts.map(a => a.id === id ? { ...a, acknowledged: true } : a));
+  useEffect(() => {
+    const unsubscribe = listenAlerts(
+      (items) => {
+        setAlerts(items);
+        setLoading(false);
+        setError(null);
+      },
+      (listenerError) => {
+        setError(listenerError.message || "Failed to sync alerts.");
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleAcknowledgeAlert = async (id: string) => {
+    try {
+      await acknowledgeAlert(id, true);
+    } catch (ackError) {
+      setError(ackError instanceof Error ? ackError.message : "Failed to acknowledge alert.");
+    }
   };
 
-  const deleteAlert = (id: string) => {
-    setAlerts(alerts.filter(a => a.id !== id));
+  const handleDeleteAlert = async (id: string) => {
+    try {
+      await deleteAlert(id);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Failed to delete alert.");
+    }
   };
 
-  const clearAll = () => {
-    setAlerts([]);
+  const handleClearAll = async () => {
+    try {
+      await clearAlerts();
+    } catch (clearError) {
+      setError(clearError instanceof Error ? clearError.message : "Failed to clear alerts.");
+    }
   };
 
-  const getAlertIcon = (type: Alert["type"]) => {
+  const getAlertIcon = (type: AlertRecord["type"]) => {
     switch (type) {
       case "danger": return <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />;
       case "warning": return <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-warning" />;
@@ -47,7 +86,7 @@ const Alerts = () => {
     }
   };
 
-  const getAlertStyles = (type: Alert["type"]) => {
+  const getAlertStyles = (type: AlertRecord["type"]) => {
     switch (type) {
       case "danger": return "border-l-4 border-l-destructive bg-destructive/5";
       case "warning": return "border-l-4 border-l-warning bg-warning/5";
@@ -56,7 +95,23 @@ const Alerts = () => {
     }
   };
 
-  const filteredAlerts = filter === "all" ? alerts : alerts.filter(a => a.type === filter);
+  const filteredAlerts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return alerts.filter((alert) => {
+      const matchesFilter = filter === "all" ? true : alert.type === filter;
+      if (!matchesFilter) return false;
+
+      if (!query) return true;
+
+      return (
+        alert.title.toLowerCase().includes(query) ||
+        alert.message.toLowerCase().includes(query) ||
+        (alert.source || "").toLowerCase().includes(query)
+      );
+    });
+  }, [alerts, filter, search]);
+
   const unacknowledgedCount = alerts.filter(a => !a.acknowledged).length;
 
   return (
@@ -79,13 +134,16 @@ const Alerts = () => {
               )}
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={clearAll}>
+          <Button variant="outline" size="sm" onClick={handleClearAll}>
             <Trash2 className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Clear</span>
           </Button>
         </header>
 
         <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
+          {loading && <p className="text-sm text-muted-foreground">Loading alerts...</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
           {/* Stats */}
           <div className="grid gap-2 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-2 sm:grid-cols-4 xl:grid-cols-4">
             {[
@@ -114,7 +172,12 @@ const Alerts = () => {
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 md:gap-5">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 md:h-5 md:w-5 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search..." className="pl-10 text-sm md:text-base" />
+              <Input
+                placeholder="Search..."
+                className="pl-10 text-sm md:text-base"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
             </div>
             <Button variant="outline" size="sm" className="hidden sm:flex md:text-base">
               <Filter className="mr-2 h-4 w-4 md:h-5 md:w-5" />
@@ -149,7 +212,7 @@ const Alerts = () => {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground truncate">{alert.title}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground truncate">{alert.message}</p>
-                        <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground">{alert.time}</p>
+                        <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground">{getRelativeTime(alert.createdAt)}</p>
                       </div>
                     </div>
                     <div className="flex gap-1 sm:gap-2 shrink-0 ml-2">
@@ -158,7 +221,7 @@ const Alerts = () => {
                           variant="ghost" 
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => acknowledgeAlert(alert.id)}
+                          onClick={() => void handleAcknowledgeAlert(alert.id)}
                         >
                           <CheckCircle className="h-4 w-4" />
                         </Button>
@@ -167,7 +230,7 @@ const Alerts = () => {
                         variant="ghost" 
                         size="sm"
                         className="h-8 w-8 p-0"
-                        onClick={() => deleteAlert(alert.id)}
+                        onClick={() => void handleDeleteAlert(alert.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

@@ -4,6 +4,8 @@ Complete MERN stack application for smart home monitoring with IoT devices.
 
 ## 🚀 Quick Start Guide
 
+> **First time?** Start with [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) to configure Firebase in 5 minutes.
+
 ### Prerequisites
 - Node.js (v18 or higher)
 - MongoDB (local or MongoDB Atlas)
@@ -25,6 +27,20 @@ npm install
 ### 2. Configure Environment Variables
 
 The `.env` and `.env.local` files are already created in the root directory.
+
+For Firebase Realtime Database, add these variables:
+
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_DATABASE_URL=https://your_project-default-rtdb.firebaseio.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+**📖 See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for detailed steps to get these credentials.**
 
 ### 3. Start MongoDB
 Make sure MongoDB is running on your system
@@ -54,6 +70,56 @@ Frontend will run on: `http://localhost:5173`
 ## 🔌 API Endpoints
 
 Visit `/services` page in the application to see all available API endpoints.
+
+## 🔥 Firebase Realtime Database
+
+The app now supports live data using Firebase RTDB with this structure:
+
+```json
+{
+	"sensors": {
+		"gas": 420,
+		"water": 62,
+		"voltage": 229.4,
+		"current": 1.46,
+		"power": 335,
+		"motion": false,
+		"flowRate": 11.2,
+		"updatedAt": 1712472450000
+	},
+	"devices": {
+		"light": true,
+		"pump": false,
+		"fan": true,
+		"motionDetection": true,
+		"updatedAt": 1712472450000
+	},
+	"alerts": {
+		"-Nx123abc": {
+			"type": "warning",
+			"title": "Low Water Level",
+			"message": "Water tank level is 24% (threshold < 30%).",
+			"source": "water",
+			"acknowledged": false,
+			"createdAt": 1712472450000
+		}
+	}
+}
+```
+
+Service functions are in `src/services/realtimeDbService.ts`:
+
+- `listenSensors()`
+- `listenDevices()`
+- `updateDevice(deviceId, state)`
+- `pushAlert(alert)`
+
+Additional helpers are included for alerts page actions:
+
+- `listenAlerts()`
+- `acknowledgeAlert()`
+- `deleteAlert()`
+- `clearAlerts()`
 
 ## Project info
 

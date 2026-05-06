@@ -1,132 +1,288 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  listenAlerts,
+  listenDevices,
+  listenSensors,
+  listenLEDStatus,
+  pushAlert,
+  updateDevice,
+  setLEDControl,
+  type AlertRecord,
+  type DevicesPayload,
+} from "@/services/realtimeDbService";
 
 export interface SensorData {
   voltage: number;
   current: number;
   power: number;
   gas: number;
+  water: number;
+  motion: boolean;
+  flowRate: number;
   pir: boolean;
   waterLevel: number;
-  flowRate: number;
 }
 
 export interface DeviceStates {
+  light: boolean;
+  pump: boolean;
+  fan: boolean;
+  motionDetection: boolean;
   lights: boolean;
   waterPump: boolean;
   exhaustFan: boolean;
-  motionDetection: boolean;
 }
 
 interface MQTTSimulationReturn {
   sensorData: SensorData;
   deviceStates: DeviceStates;
+  alerts: AlertRecord[];
+  loading: boolean;
+  error: string | null;
   isConnected: boolean;
   connectionStatus: "connected" | "connecting" | "disconnected";
   lastUpdate: Date | null;
-  toggleDevice: (device: keyof DeviceStates) => void;
+  toggleDevice: (device: keyof DeviceStates) => Promise<void>;
+  ledStatus: 0 | 1 | null;
+  ledError: string | null;
+  togglingDevices: Set<string>;
 }
 
-// Simulate realistic sensor value fluctuations
-const fluctuate = (base: number, variance: number, min?: number, max?: number) => {
-  const change = (Math.random() - 0.5) * variance * 2;
-  let newValue = base + change;
-  if (min !== undefined) newValue = Math.max(min, newValue);
-  if (max !== undefined) newValue = Math.min(max, newValue);
-  return Number(newValue.toFixed(2));
+const deviceAliasMap: Record<keyof DeviceStates, keyof Omit<DevicesPayload, "updatedAt">> = {
+  light: "light",
+  pump: "pump",
+  fan: "fan",
+  motionDetection: "motionDetection",
+  lights: "light",
+  waterPump: "pump",
+  exhaustFan: "fan",
 };
 
 export function useMQTTSimulation(): MQTTSimulationReturn {
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<"connected" | "connecting" | "disconnected">("disconnected");
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-
   const [sensorData, setSensorData] = useState<SensorData>({
-    voltage: 228.5,
-    current: 1.52,
-    power: 347,
-    gas: 320,
+    voltage: 0,
+    current: 0,
+    power: 0,
+    gas: 0,
+    water: 0,
+    motion: false,
+    flowRate: 0,
     pir: false,
-    waterLevel: 78,
-    flowRate: 12,
+    waterLevel: 0,
   });
-
   const [deviceStates, setDeviceStates] = useState<DeviceStates>({
-    lights: true,
+    light: false,
+    pump: false,
+    fan: false,
+    motionDetection: false,
+    lights: false,
     waterPump: false,
-    exhaustFan: true,
-    motionDetection: true,
+    exhaustFan: false,
   });
+  const [alerts, setAlerts] = useState<AlertRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [isSensorReady, setIsSensorReady] = useState(false);
+  const [isDeviceReady, setIsDeviceReady] = useState(false);
+  const [ledStatus, setLedStatus] = useState<0 | 1 | null>(null);
+  const [ledError, setLedError] = useState<string | null>(null);
+  const [togglingDevices, setTogglingDevices] = useState<Set<string>>(new Set());
+  const thresholdsRef = useRef({ gasDangerActive: false, waterLowActive: false });
+  const toggleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Simulate MQTT connection
   useEffect(() => {
-    setConnectionStatus("connecting");
-    
-    const connectTimeout = setTimeout(() => {
-      setIsConnected(true);
-      setConnectionStatus("connected");
-      console.log("[MQTT] Connected to ESP32 simulator");
-    }, 1500);
+    try {
+      const offSensors = listenSensors(
+        (data) => {
+          setSensorData({
+            voltage: data.voltage,
+            current: data.current,
+            power: data.power,
+            gas: data.gas,
+            water: data.water,
+            motion: data.motion,
+            flowRate: data.flowRate,
+            pir: data.motion,
+            waterLevel: data.water,
+          });
+          setIsSensorReady(true);
+          setLastUpdate(data.updatedAt ? new Date(data.updatedAt) : new Date());
+          setError(null);
+        },
+        (listenerError) => {
+          setError(listenerError.message || "Failed to listen to sensors.");
+        }
+      );
 
-    return () => clearTimeout(connectTimeout);
+      const offDevices = listenDevices(
+        (data) => {
+          console.log("📡 Device state updated from Firebase:", data);
+          setDeviceStates({
+            light: data.light,
+            pump: data.pump,
+            fan: data.fan,
+            motionDetection: data.motionDetection,
+            lights: data.light,
+            waterPump: data.pump,
+            exhaustFan: data.fan,
+          });
+          setIsDeviceReady(true);
+          setError(null);
+        },
+        (listenerError) => {
+          console.error("❌ Device listener error:", listenerError);
+          setError(listenerError.message || "Failed to listen to devices.");
+        }
+      );
+
+      // Listen to LED status for the indicator only (0 or 1)
+      // Does NOT affect light switch control
+      const offLED = listenLEDStatus(
+        (ledState) => {
+          console.log("🔴 LED indicator update:", ledState ? 1 : 0);
+          setLedStatus(ledState ? 1 : 0);
+          setLedError(null);
+        },
+        (listenerError) => {
+          console.error("❌ LED listener error:", listenerError);
+          setLedError(listenerError.message || "LED connection error");
+          setLedStatus(null);
+        }
+      );
+
+      const offAlerts = listenAlerts(
+        (items) => {
+          setAlerts(items);
+        },
+        (listenerError) => {
+          setError(listenerError.message || "Failed to listen to alerts.");
+        }
+      );
+
+      return () => {
+        offSensors();
+        offDevices();
+        offLED();
+        offAlerts();
+      };
+    } catch (initializationError) {
+      const errorMsg =
+        initializationError instanceof Error
+          ? initializationError.message
+          : "Failed to initialize Firebase. Check your environment variables.";
+      setError(errorMsg);
+      setLoading(false);
+      return () => {
+        /* cleanup */
+      };
+    }
   }, []);
 
-  // Simulate real-time sensor updates
   useEffect(() => {
-    if (!isConnected) return;
+    setLoading(!(isSensorReady && isDeviceReady));
+  }, [isSensorReady, isDeviceReady]);
 
-    const updateInterval = setInterval(() => {
-      setSensorData((prev) => {
-        // Calculate power based on voltage and current
-        const newVoltage = fluctuate(prev.voltage, 2, 220, 200);
-        const newCurrent = fluctuate(prev.current, 0.2, 0.5, 5);
-        const newPower = Number((newVoltage * newCurrent).toFixed(0));
-        
-        // Water level changes based on pump status
-        const waterChange = deviceStates.waterPump ? -0.5 : 0.1;
-        const newWaterLevel = Math.max(0, Math.min(100, prev.waterLevel + waterChange));
-        
-        // Flow rate depends on pump
-        const newFlowRate = deviceStates.waterPump 
-          ? fluctuate(15, 2, 10, 20)
-          : fluctuate(0.5, 0.3, 0, 2);
+  useEffect(() => {
+    const checkThresholds = async () => {
+      if (sensorData.gas > 500 && !thresholdsRef.current.gasDangerActive) {
+        thresholdsRef.current.gasDangerActive = true;
+        await pushAlert({
+          type: "danger",
+          title: "Critical Gas Alert",
+          message: `Gas level is ${Math.round(sensorData.gas)} ppm (threshold > 500).`,
+          source: "gas",
+        });
+      } else if (sensorData.gas <= 500) {
+        thresholdsRef.current.gasDangerActive = false;
+      }
 
-        // Gas level fluctuates
-        const newGas = fluctuate(prev.gas, 15, 200, 500);
+      if (sensorData.water < 30 && !thresholdsRef.current.waterLowActive) {
+        thresholdsRef.current.waterLowActive = true;
+        await pushAlert({
+          type: "warning",
+          title: "Low Water Level",
+          message: `Water tank level is ${Math.round(sensorData.water)}% (threshold < 30%).`,
+          source: "water",
+        });
+      } else if (sensorData.water >= 30) {
+        thresholdsRef.current.waterLowActive = false;
+      }
+    };
 
-        // Random PIR triggers
-        const newPir = deviceStates.motionDetection && Math.random() < 0.1;
-
-        return {
-          voltage: newVoltage,
-          current: newCurrent,
-          power: newPower,
-          gas: newGas,
-          pir: newPir,
-          waterLevel: Number(newWaterLevel.toFixed(1)),
-          flowRate: Number(newFlowRate.toFixed(1)),
-        };
-      });
-
-      setLastUpdate(new Date());
-    }, 2000);
-
-    return () => clearInterval(updateInterval);
-  }, [isConnected, deviceStates.waterPump, deviceStates.motionDetection]);
-
-  const toggleDevice = useCallback((device: keyof DeviceStates) => {
-    setDeviceStates((prev) => {
-      const newState = !prev[device];
-      console.log(`[MQTT] Publishing: ${device} -> ${newState ? "ON" : "OFF"}`);
-      return { ...prev, [device]: newState };
+    void checkThresholds().catch((thresholdError: Error) => {
+      setError(thresholdError.message || "Failed to push threshold alert.");
     });
+  }, [sensorData.gas, sensorData.water]);
+
+  const toggleDevice = useCallback(async (device: keyof DeviceStates) => {
+    // Prevent rapid consecutive clicks on same device
+    setTogglingDevices(prev => {
+      if (prev.has(device)) return prev;
+      return new Set([...prev, device]);
+    });
+
+    const firebaseDeviceId = deviceAliasMap[device];
+    const currentState = deviceStates[device];
+    const newState = !currentState;
+
+    console.log(`🔄 Toggle ${device}: ${currentState} → ${newState}`);
+
+    try {
+      // For light device, update /led (ESP32) 
+      if (device === "light" || device === "lights") {
+        console.log(`⚡ Sending LED control: ${newState ? 1 : 0}`);
+        await setLEDControl(newState);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Update device state in Firebase
+      console.log(`💾 Updating Firebase device: ${firebaseDeviceId} = ${newState}`);
+      await updateDevice(firebaseDeviceId, newState);
+      setError(null);
+      
+    } catch (updateError) {
+      const message = updateError instanceof Error ? updateError.message : "Failed to update device.";
+      console.error(`❌ Toggle error:`, message);
+      setError(message);
+    } finally {
+      // Clear toggling state after minimum time
+      if (toggleTimeoutRef.current) clearTimeout(toggleTimeoutRef.current);
+      toggleTimeoutRef.current = setTimeout(() => {
+        setTogglingDevices(prev => {
+          const next = new Set(prev);
+          next.delete(device);
+          return next;
+        });
+      }, 300);
+    }
+  }, [deviceStates]);
+
+  const connectionStatus = error
+    ? "disconnected"
+    : loading
+    ? "connecting"
+    : "connected";
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (toggleTimeoutRef.current) clearTimeout(toggleTimeoutRef.current);
+    };
   }, []);
 
   return {
     sensorData,
     deviceStates,
-    isConnected,
+    alerts,
+    loading,
+    error,
+    isConnected: connectionStatus === "connected",
     connectionStatus,
     lastUpdate,
     toggleDevice,
+    ledStatus,
+    ledError,
+    togglingDevices,
   };
 }
