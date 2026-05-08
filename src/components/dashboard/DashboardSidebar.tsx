@@ -32,7 +32,7 @@ const navItems = [
 export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { ledStatus } = useMQTTSimulation();
+  const { ledStatus, occupancyState, connectionStatus } = useMQTTSimulation();
 
   return (
     <aside
@@ -60,8 +60,8 @@ export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
               <Cpu className={cn("text-sidebar-primary-foreground", isMobile ? "h-5 w-5 sm:h-6 sm:w-6" : "h-5 w-5 sm:h-6 sm:w-6")} />
             </div>
             <div>
-              <h1 className={cn("font-bold text-sidebar-foreground", isMobile ? "text-sm sm:text-base" : "text-sm sm:text-base")}>IoT Home</h1>
-              <p className={cn("text-sidebar-foreground/60", isMobile ? "text-[10px] sm:text-xs" : "text-[10px] sm:text-xs")}>Smart Monitoring</p>
+              <h1 className={cn("font-bold text-sidebar-foreground", isMobile ? "text-sm sm:text-base" : "text-sm sm:text-base")}>Green Home Hub</h1>
+              <p className={cn("text-sidebar-foreground/60", isMobile ? "text-[10px] sm:text-xs" : "text-[10px] sm:text-xs")}>Tourist accommodation monitoring</p>
             </div>
           </div>
         )}
@@ -123,8 +123,8 @@ export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
           </div>
           {(!collapsed || isMobile) && (
             <div className="flex-1">
-              <p className={cn("font-medium text-sidebar-foreground", isMobile ? "text-xs sm:text-sm" : "text-xs sm:text-sm")}>ESP32 Connected</p>
-              <p className={cn("text-sidebar-foreground/60", isMobile ? "text-[10px] sm:text-xs" : "text-[10px] sm:text-xs")}>192.168.1.45</p>
+              <p className={cn("font-medium text-sidebar-foreground", isMobile ? "text-xs sm:text-sm" : "text-xs sm:text-sm")}>ESP32 {connectionStatus === "connected" ? "Connected" : connectionStatus === "connecting" ? "Syncing" : "Offline"}</p>
+              <p className={cn("text-sidebar-foreground/60", isMobile ? "text-[10px] sm:text-xs" : "text-[10px] sm:text-xs")}>Room state: {occupancyState.replace(/_/g, " ")}</p>
             </div>
           )}
         </div>

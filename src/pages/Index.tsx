@@ -31,7 +31,11 @@ const Index = () => {
     toggleDevice,
     ledStatus,
     ledError,
-    togglingDevices
+    togglingDevices,
+    occupancyState,
+    occupancyConfidence,
+    estimatedEnergyCost,
+    estimatedSavings
   } = useMQTTSimulation();
 
   // Calculate trends based on previous values (simplified for demo)
@@ -47,6 +51,40 @@ const Index = () => {
   const currentTrend = getTrend(sensorData.current, 1.5);
   const powerTrend = getTrend(sensorData.power, 345);
   const gasTrend = getTrend(sensorData.gas, 350);
+  const roomOverviewStats = [
+    {
+      label: "Room Energy",
+      value: Number(sensorData.energy ?? 0).toFixed(1),
+      unit: "kWh",
+      icon: Zap,
+      change: sensorData.energy ? "Live PZEM data" : "Awaiting meter data",
+      positive: true,
+    },
+    {
+      label: "Occupancy State",
+      value: occupancyState.replace(/_/g, " "),
+      unit: "",
+      icon: Eye,
+      change: `${Math.round(occupancyConfidence * 100)}% confidence`,
+      positive: occupancyState !== "VACANT" && occupancyState !== "VACANT_CONFIRMED",
+    },
+    {
+      label: "Estimated Cost",
+      value: `LKR ${estimatedEnergyCost.toFixed(0)}`,
+      unit: "",
+      icon: Gauge,
+      change: "Tariff-based",
+      positive: false,
+    },
+    {
+      label: "Estimated Savings",
+      value: `LKR ${estimatedSavings.toFixed(0)}`,
+      unit: "",
+      icon: Flame,
+      change: "Automation impact",
+      positive: estimatedSavings >= 0,
+    },
+  ];
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -60,7 +98,7 @@ const Index = () => {
             <div>
               <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>
               <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">
-                Real-time monitoring & control
+                Room occupancy, energy, and appliance monitoring
               </p>
             </div>
           </div>
@@ -152,8 +190,30 @@ const Index = () => {
 
         {/* Content */}
         <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
+          <div className="sensor-card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Property Context</p>
+              <h2 className="mt-1 text-lg font-semibold text-card-foreground">Demo Villa · Room 101</h2>
+              <p className="text-sm text-muted-foreground">Current room state is {occupancyState.replace(/_/g, " ")} with {Math.round(occupancyConfidence * 100)}% confidence.</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div className="rounded-lg border border-border/60 bg-background/60 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Energy Cost</p>
+                <p className="text-sm font-semibold text-card-foreground">LKR {estimatedEnergyCost.toFixed(0)}</p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/60 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Savings</p>
+                <p className="text-sm font-semibold text-card-foreground">LKR {estimatedSavings.toFixed(0)}</p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/60 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Sync</p>
+                <p className="text-sm font-semibold text-card-foreground">{connectionStatus === "connected" ? "Live" : connectionStatus}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Stats Overview */}
-          <StatsOverview />
+          <StatsOverview stats={roomOverviewStats} />
 
           {/* Sensor Grid */}
           <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
@@ -213,14 +273,14 @@ const Index = () => {
               <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-foreground">Device Controls</h2>
               <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 lg:grid-cols-2">
                 <DeviceControl
-                  name="Living Room Lights"
+                  name="Guest Room Lights"
                   icon={Lightbulb}
                   isOn={deviceStates.light}
                   isToggling={togglingDevices.has("light")}
                   onToggle={() => void toggleDevice("light")}
                 />
                 <DeviceControl
-                  name="Water Pump"
+                  name="Room Water Pump"
                   icon={Droplets}
                   isOn={deviceStates.pump}
                   isToggling={togglingDevices.has("pump")}
@@ -234,7 +294,7 @@ const Index = () => {
                   onToggle={() => void toggleDevice("fan")}
                 />
                 <DeviceControl
-                  name="Motion Detection"
+                  name="Occupancy Sensor"
                   icon={Eye}
                   isOn={deviceStates.motionDetection}
                   isToggling={togglingDevices.has("motionDetection")}

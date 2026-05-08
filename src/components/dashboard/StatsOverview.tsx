@@ -1,6 +1,15 @@
-import { Zap, Droplets, Flame, TrendingDown } from "lucide-react";
+import { Zap, Droplets, Flame, TrendingDown, type LucideIcon } from "lucide-react";
 
-const stats = [
+export interface OverviewStat {
+  label: string;
+  value: string | number;
+  unit: string;
+  icon: LucideIcon;
+  change: string;
+  positive: boolean;
+}
+
+const defaultStats: OverviewStat[] = [
   {
     label: "Today's Usage",
     value: "24.5",
@@ -35,7 +44,11 @@ const stats = [
   },
 ];
 
-export function StatsOverview() {
+interface StatsOverviewProps {
+  stats?: OverviewStat[];
+}
+
+export function StatsOverview({ stats = defaultStats }: StatsOverviewProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => (

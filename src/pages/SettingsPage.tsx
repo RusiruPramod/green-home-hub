@@ -28,8 +28,8 @@ const SettingsPage = () => {
           <div className="flex items-center gap-2 md:gap-3">
             <MobileSidebarTrigger />
             <div>
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Settings</h1>
-              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Configure dashboard</p>
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Accommodation Settings</h1>
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Configure Firebase, tariffs, and room monitoring</p>
             </div>
           </div>
         </header>
@@ -114,24 +114,24 @@ const SettingsPage = () => {
                 <Wifi className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Connection
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">MQTT & API</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Firebase RTDB & room sync</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 md:space-y-5">
               <div className="grid gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm">MQTT Broker</Label>
-                  <Input defaultValue="mqtt://192.168.1.100:1883" className="text-xs sm:text-sm" />
+                  <Label className="text-xs sm:text-sm">Firebase Realtime DB</Label>
+                  <Input defaultValue="https://your-project-default-rtdb.firebaseio.com" className="text-xs sm:text-sm" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm">API Endpoint</Label>
-                  <Input defaultValue="http://localhost:3001/api" className="text-xs sm:text-sm" />
+                  <Label className="text-xs sm:text-sm">Room / Property ID</Label>
+                  <Input defaultValue="property_001 / room_101" className="text-xs sm:text-sm" />
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-lg bg-success/10 p-3 sm:p-4">
                 <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-success animate-pulse" />
                 <div>
-                  <p className="text-sm font-medium text-success">Connected</p>
-                  <p className="text-xs text-muted-foreground">ESP32 @ 192.168.1.45</p>
+                  <p className="text-sm font-medium text-success">Room sync active</p>
+                  <p className="text-xs text-muted-foreground">Use VITE_FIREBASE_* variables for deployment</p>
                 </div>
               </div>
             </CardContent>

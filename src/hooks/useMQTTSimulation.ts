@@ -9,12 +9,21 @@ import {
   setLEDControl,
   type AlertRecord,
   type DevicesPayload,
-} from "@/services/realtimeDbService";
+} from "../services/realtimeDbService";
+import {
+  calculateEnergySavings,
+  calculateOccupancyConfidence,
+  estimateTariffCost,
+  inferOccupancyState,
+  type OccupancyState,
+  type TariffConfig,
+} from "../lib/proposalLogic";
 
 export interface SensorData {
   voltage: number;
   current: number;
   power: number;
+  energy?: number;
   gas: number;
   water: number;
   motion: boolean;
@@ -41,6 +50,10 @@ interface MQTTSimulationReturn {
   error: string | null;
   isConnected: boolean;
   connectionStatus: "connected" | "connecting" | "disconnected";
+  occupancyState: OccupancyState;
+  occupancyConfidence: number;
+  estimatedEnergyCost: number;
+  estimatedSavings: number;
   lastUpdate: Date | null;
   toggleDevice: (device: keyof DeviceStates) => Promise<void>;
   ledStatus: 0 | 1 | null;
@@ -59,10 +72,17 @@ const deviceAliasMap: Record<keyof DeviceStates, keyof Omit<DevicesPayload, "upd
 };
 
 export function useMQTTSimulation(): MQTTSimulationReturn {
+  const DEFAULT_TARIFF: TariffConfig = {
+    currency: "LKR",
+    offPeak: { start: "22:30", end: "05:30", rate: 0 },
+    day: { start: "05:30", end: "18:30", rate: 0 },
+    peak: { start: "18:30", end: "22:30", rate: 0 },
+  };
   const [sensorData, setSensorData] = useState<SensorData>({
     voltage: 0,
     current: 0,
     power: 0,
+    energy: 0,
     gas: 0,
     water: 0,
     motion: false,
@@ -88,17 +108,54 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   const [ledStatus, setLedStatus] = useState<0 | 1 | null>(null);
   const [ledError, setLedError] = useState<string | null>(null);
   const [togglingDevices, setTogglingDevices] = useState<Set<string>>(new Set());
+  const [occupancyState, setOccupancyState] = useState<OccupancyState>("VACANT");
+  const [occupancyConfidence, setOccupancyConfidence] = useState(0);
+  const [estimatedEnergyCost, setEstimatedEnergyCost] = useState(0);
+  const [estimatedSavings, setEstimatedSavings] = useState(0);
   const thresholdsRef = useRef({ gasDangerActive: false, waterLowActive: false });
-  const toggleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const toggleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const occupancyRef = useRef<OccupancyState>("VACANT");
+  const lastStateChangeRef = useRef<number | null>(null);
+  const lastActivityRef = useRef<number | null>(null);
 
   useEffect(() => {
     try {
       const offSensors = listenSensors(
         (data) => {
+          const now = Date.now();
+          const sensorSnapshot = {
+            motion: data.motion,
+            pir: data.motion,
+            doorOpen: data.doorOpen,
+            ultrasonicPresence: data.ultrasonicPresence,
+            voltage: data.voltage,
+            current: data.current,
+            power: data.power,
+            energy: data.energy,
+          };
+
+          if (sensorSnapshot.motion || sensorSnapshot.doorOpen || sensorSnapshot.ultrasonicPresence) {
+            lastActivityRef.current = now;
+          }
+
+          const nextOccupancyState = inferOccupancyState({
+            currentState: occupancyRef.current,
+            lastStateChangeAt: lastStateChangeRef.current,
+            lastActivityAt: lastActivityRef.current,
+            sensor: sensorSnapshot,
+            now,
+          });
+
+          if (nextOccupancyState !== occupancyRef.current) {
+            occupancyRef.current = nextOccupancyState;
+            lastStateChangeRef.current = now;
+          }
+
           setSensorData({
             voltage: data.voltage,
             current: data.current,
             power: data.power,
+            energy: data.energy ?? 0,
             gas: data.gas,
             water: data.water,
             motion: data.motion,
@@ -106,6 +163,8 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
             pir: data.motion,
             waterLevel: data.water,
           });
+          setOccupancyState(nextOccupancyState);
+          setOccupancyConfidence(calculateOccupancyConfidence(sensorSnapshot));
           setIsSensorReady(true);
           setLastUpdate(data.updatedAt ? new Date(data.updatedAt) : new Date());
           setError(null);
@@ -182,6 +241,20 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   useEffect(() => {
     setLoading(!(isSensorReady && isDeviceReady));
   }, [isSensorReady, isDeviceReady]);
+
+  useEffect(() => {
+    const energyKWh = sensorData.energy ?? 0;
+    const estimatedCost = estimateTariffCost(energyKWh, DEFAULT_TARIFF, lastUpdate?.getTime() ?? Date.now());
+    const baselineCost = estimatedCost;
+    const automatedCost = occupancyState === "VACANT" || occupancyState === "VACANT_CONFIRMED"
+      ? estimatedCost * 0.8
+      : estimatedCost;
+    const savings = calculateEnergySavings(baselineCost, automatedCost);
+
+    setEstimatedEnergyCost(estimatedCost);
+    setEstimatedSavings(savings.savings);
+
+  }, [lastUpdate, occupancyState, sensorData.energy]);
 
   useEffect(() => {
     const checkThresholds = async () => {
@@ -279,6 +352,10 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     error,
     isConnected: connectionStatus === "connected",
     connectionStatus,
+    occupancyState,
+    occupancyConfidence,
+    estimatedEnergyCost,
+    estimatedSavings,
     lastUpdate,
     toggleDevice,
     ledStatus,

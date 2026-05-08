@@ -16,7 +16,15 @@ export interface SensorsPayload {
   voltage: number;
   current: number;
   power: number;
+  energy?: number;
   motion: boolean;
+  pir?: boolean;
+  doorOpen?: boolean;
+  ultrasonicPresence?: boolean;
+  occupancyState?: string;
+  occupancyConfidence?: number;
+  relayStatus?: boolean;
+  buzzerStatus?: boolean;
   flowRate: number;
   updatedAt?: number;
 }
@@ -26,6 +34,10 @@ export interface DevicesPayload {
   pump: boolean;
   fan: boolean;
   motionDetection: boolean;
+  ac?: boolean;
+  geyser?: boolean;
+  safetyRelay?: boolean;
+  buzzer?: boolean;
   updatedAt?: number;
 }
 
@@ -50,7 +62,15 @@ const sensorDefaults: SensorsPayload = {
   voltage: 0,
   current: 0,
   power: 0,
+  energy: 0,
   motion: false,
+  pir: false,
+  doorOpen: false,
+  ultrasonicPresence: false,
+  occupancyState: "VACANT",
+  occupancyConfidence: 0,
+  relayStatus: false,
+  buzzerStatus: false,
   flowRate: 0,
 };
 
@@ -59,6 +79,10 @@ const deviceDefaults: DevicesPayload = {
   pump: false,
   fan: false,
   motionDetection: false,
+  ac: false,
+  geyser: false,
+  safetyRelay: false,
+  buzzer: false,
 };
 
 const checkFirebaseInit = () => {

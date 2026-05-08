@@ -13,31 +13,20 @@ const firebaseConfig = {
   measurementId: "G-XBY8QKFX4J"
 };
 
-const missingKeys = Object.entries(firebaseConfig)
-  .filter(([, value]) => !value)
-  .map(([key]) => key);
-
 let realtimeDb: Database | null = null;
 let initError: Error | null = null;
 
-if (missingKeys.length > 0) {
-  const message =
-    `Missing Firebase environment variables: ${missingKeys.join(", ")}\n\n` +
-    `Please fill in VITE_FIREBASE_* in your .env file.\n` +
-    `See FIREBASE_SETUP.md for detailed instructions.`;
-  
-  initError = new Error(message);
-  console.error("❌", message);
-} else {
-  try {
-    const app = initializeApp(firebaseConfig);
-    realtimeDb = getDatabase(app);
+try {
+  const app = initializeApp(firebaseConfig);
+  realtimeDb = getDatabase(app);
+
+  if (typeof window !== "undefined") {
     getAnalytics(app);
-    console.log("✓ Firebase Realtime Database connected");
-  } catch (error) {
-    initError = error instanceof Error ? error : new Error(String(error));
-    console.error("Firebase initialization failed:", initError.message);
   }
+  console.log("✓ Firebase Realtime Database connected");
+} catch (error) {
+  initError = error instanceof Error ? error : new Error(String(error));
+  console.error("Firebase initialization failed:", initError.message);
 }
 
 export { realtimeDb, initError };
