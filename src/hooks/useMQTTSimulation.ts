@@ -112,6 +112,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   const [occupancyConfidence, setOccupancyConfidence] = useState(0);
   const [estimatedEnergyCost, setEstimatedEnergyCost] = useState(0);
   const [estimatedSavings, setEstimatedSavings] = useState(0);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const thresholdsRef = useRef({ gasDangerActive: false, waterLowActive: false });
   const toggleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const occupancyRef = useRef<OccupancyState>("VACANT");
@@ -239,6 +240,14 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   }, []);
 
   useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     setLoading(!(isSensorReady && isDeviceReady));
   }, [isSensorReady, isDeviceReady]);
 
@@ -331,10 +340,14 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     }
   }, [deviceStates]);
 
+  const isDataStale = !lastUpdate || currentTime - lastUpdate.getTime() > 15000;
+
   const connectionStatus = error
     ? "disconnected"
     : loading
     ? "connecting"
+    : isDataStale
+    ? "disconnected"
     : "connected";
 
   // Cleanup timeout on unmount

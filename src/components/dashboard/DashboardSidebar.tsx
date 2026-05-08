@@ -116,7 +116,13 @@ export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
             <span
               className={cn(
                 "absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-sidebar",
-                ledStatus === 1 ? "bg-success animate-blink-fast-dot" : "bg-success",
+                connectionStatus === "connected"
+                  ? ledStatus === 1
+                    ? "bg-success animate-blink-fast-dot"
+                    : "bg-success"
+                  : connectionStatus === "connecting"
+                  ? "bg-warning animate-pulse"
+                  : "bg-muted-foreground/50",
                 isMobile ? "h-2 w-2 sm:h-2.5 sm:w-2.5" : "h-2 w-2 sm:h-2.5 sm:w-2.5"
               )}
             />
