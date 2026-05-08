@@ -60,7 +60,7 @@ export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
               <Cpu className={cn("text-sidebar-primary-foreground", isMobile ? "h-5 w-5 sm:h-6 sm:w-6" : "h-5 w-5 sm:h-6 sm:w-6")} />
             </div>
             <div>
-              <h1 className={cn("font-bold text-sidebar-foreground", isMobile ? "text-sm sm:text-base" : "text-sm sm:text-base")}>Green Home Hub</h1>
+              <h1 className={cn("font-bold text-sidebar-foreground", isMobile ? "text-sm sm:text-base" : "text-sm sm:text-base")}>Smart IoT-Based EMS</h1>
               <p className={cn("text-sidebar-foreground/60", isMobile ? "text-[10px] sm:text-xs" : "text-[10px] sm:text-xs")}>Tourist accommodation monitoring</p>
             </div>
           </div>
