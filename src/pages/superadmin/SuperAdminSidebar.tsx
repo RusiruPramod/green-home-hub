@@ -1,24 +1,14 @@
 import {
   LayoutDashboard,
-  Zap,
-  Droplets,
-  Flame,
-  Lightbulb,
-  Bell,
-  BarChart3,
-  Settings,
-  Cpu,
-  Wifi,
-  ChevronLeft,
-  Server,
+  Building2,
   Banknote,
-  TestTube,
+  BarChart3,
   LogOut,
+  Shield,
+  Cpu,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useFirebaseRealtime } from "@/hooks/useFirebaseRealtime";
 import { cn } from "@/lib/utils";
-
 import {
   Sidebar,
   SidebarContent,
@@ -34,40 +24,39 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Live Overview", path: "/" },
-  { icon: Droplets, label: "Water Monitoring", path: "/water" },
-  { icon: Lightbulb, label: "Room Management", path: "/control" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics" },
-  { icon: Bell, label: "Alerts", path: "/alerts" },
-  { icon: TestTube, label: "Evaluation", path: "/evaluation" },
-  { icon: Banknote, label: "Tariff Info", path: "/settings/tariffs" },
+  { icon: LayoutDashboard, label: "Overview", path: "/superadmin" },
+  { icon: Building2, label: "Hotels", path: "/superadmin/hotels" },
+  { icon: Banknote, label: "Global Tariffs", path: "/superadmin/tariffs" },
+  { icon: BarChart3, label: "Aggregate Analytics", path: "/superadmin/analytics" },
 ];
 
-export function DashboardSidebar() {
+export function SuperAdminSidebar() {
   const location = useLocation();
-  const { ledStatus } = useFirebaseRealtime();
   const { setOpenMobile } = useSidebar();
-  const { logout, userRole } = useAuth();
+  const { logout } = useAuth();
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-3 px-3 py-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Cpu className="h-4 w-4 text-primary-foreground" />
+            <Shield className="h-4 w-4 text-primary-foreground" />
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
             <span className="font-semibold text-sm">Green Home Hub</span>
-            <span className="text-xs text-muted-foreground">SME Energy Mgmt</span>
+            <Badge variant="outline" className="text-[10px] w-fit px-1.5 py-0 font-normal">
+              Super Admin
+            </Badge>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => {
@@ -90,25 +79,9 @@ export function DashboardSidebar() {
 
       <SidebarFooter>
         <div className="flex flex-col gap-2 p-2">
-          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg mx-2 mb-2">
-            <div className="relative flex shrink-0 items-center justify-center h-8 w-8">
-              <Wifi className="h-4 w-4 text-primary" />
-              <span
-                className={cn(
-                  "absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-background h-2 w-2",
-                  ledStatus === 1 ? "bg-success animate-pulse" : "bg-success"
-                )}
-              />
-            </div>
-            <div className="flex flex-col gap-0.5 overflow-hidden">
-              <span className="font-medium text-xs truncate">ESP32 Node</span>
-              <span className="text-[10px] text-muted-foreground truncate">Connected • 45ms</span>
-            </div>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10" 
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             onClick={logout}
           >
             <LogOut className="h-4 w-4 mr-2" />

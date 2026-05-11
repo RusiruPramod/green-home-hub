@@ -1,7 +1,8 @@
-import { Lightbulb, Droplets, Fan, Eye, Power, Zap, Settings2 } from "lucide-react";
+import { Lightbulb, Droplets, Fan, Eye, Power, Zap, User, UserX, BedDouble, Activity } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigger";
-import { useMQTTSimulation } from "@/hooks/useMQTTSimulation";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { useFirebaseRealtime } from "@/hooks/useFirebaseRealtime";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -9,36 +10,36 @@ import { Slider } from "@/components/ui/slider";
 import { useState, useMemo } from "react";
 
 const Control = () => {
-  const { deviceStates, toggleDevice, ledStatus, ledError, togglingDevices } = useMQTTSimulation();
+  const { sensorData, deviceStates, toggleDevice, ledStatus, ledError, togglingDevices } = useFirebaseRealtime();
   const [brightness, setBrightness] = useState([75]);
   const [fanSpeed, setFanSpeed] = useState([50]);
 
   const devices = useMemo(() => [
     { 
-      id: "light" as const, 
+      id: "lights" as const, 
       name: "Lights", 
       fullName: "Living Room Lights",
       icon: Lightbulb, 
-      isOn: deviceStates.light,
+      isOn: deviceStates.lights,
       hasSlider: true,
       sliderValue: brightness,
       setSliderValue: setBrightness,
       sliderLabel: "Brightness"
     },
     { 
-      id: "pump" as const, 
+      id: "waterPump" as const, 
       name: "Pump", 
       fullName: "Water Pump",
       icon: Droplets, 
-      isOn: deviceStates.pump,
+      isOn: deviceStates.waterPump,
       hasSlider: false
     },
     { 
-      id: "fan" as const, 
+      id: "exhaustFan" as const, 
       name: "Fan", 
       fullName: "Exhaust Fan",
       icon: Fan, 
-      isOn: deviceStates.fan,
+      isOn: deviceStates.exhaustFan,
       hasSlider: true,
       sliderValue: fanSpeed,
       setSliderValue: setFanSpeed,
@@ -54,100 +55,36 @@ const Control = () => {
     },
   ], [deviceStates, brightness, fanSpeed]);
 
+  const getOccupancyBadge = (state: string) => {
+    switch(state) {
+      case 'OCCUPIED_ACTIVE': return { icon: Activity, text: "Active", color: "text-success", bg: "bg-success/10 border-success/20" };
+      case 'OCCUPIED_IDLE': return { icon: User, text: "Idle", color: "text-warning", bg: "bg-warning/10 border-warning/20" };
+      case 'OCCUPIED_SLEEPING': return { icon: BedDouble, text: "Sleeping", color: "text-primary", bg: "bg-primary/10 border-primary/20" };
+      case 'VACANT_CONFIRMED': return { icon: UserX, text: "Vacant", color: "text-destructive", bg: "bg-destructive/10 border-destructive/20" };
+      default: return { icon: Eye, text: state || "Unknown", color: "text-muted-foreground", bg: "bg-muted" };
+    }
+  };
+
+  const occupancy = getOccupancyBadge(sensorData.occupancyState || 'Unknown');
+
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <SidebarProvider>
       <DashboardSidebar />
       
-      <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
-          <div className="flex items-center gap-2 md:gap-3">
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
+          <div className="flex items-center gap-4">
             <MobileSidebarTrigger />
             <div>
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Control</h1>
-              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Manage devices</p>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">Room Management</h1>
+              <p className="text-sm text-muted-foreground hidden sm:block">Manual override & status</p>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
             {/* LED Status Indicator (Firebase Real-time LED value) */}
-            <div 
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                paddingLeft: '16px',
-                paddingRight: '16px',
-                paddingTop: '6px',
-                paddingBottom: '6px',
-                borderRadius: '9999px',
-                border: '1px solid',
-                transition: 'all 300ms ease',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                backgroundColor: ledError 
-                  ? 'rgba(239, 68, 68, 0.2)' 
-                  : ledStatus === 1 
-                  ? 'rgba(34, 197, 94, 0.2)'
-                  : ledStatus === 0 
-                  ? 'rgba(59, 130, 246, 0.2)'
-                  : 'rgba(234, 179, 8, 0.2)',
-                borderColor: ledError
-                  ? 'rgba(239, 68, 68, 0.7)'
-                  : ledStatus === 1
-                  ? 'rgba(34, 197, 94, 0.7)'
-                  : ledStatus === 0
-                  ? 'rgba(59, 130, 246, 0.7)'
-                  : 'rgba(234, 179, 8, 0.7)',
-              }}
-            >
-              <span 
-                style={{
-                  display: 'inline-block',
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                  transition: 'all 300ms ease',
-                  backgroundColor: ledError
-                    ? 'rgb(239, 68, 68)'
-                    : ledStatus === 1
-                    ? 'rgb(34, 197, 94)'
-                    : ledStatus === 0
-                    ? 'rgb(59, 130, 246)'
-                    : 'rgb(234, 179, 8)',
-                  boxShadow: ledError
-                    ? '0 0 10px rgba(239, 68, 68, 0.6)'
-                    : ledStatus === 1
-                    ? '0 0 10px rgba(34, 197, 94, 0.6)'
-                    : ledStatus === 0
-                    ? '0 0 10px rgba(59, 130, 246, 0.6)'
-                    : '0 0 10px rgba(234, 179, 8, 0.6)',
-                }} 
-              />
-              <span 
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  transition: 'all 300ms ease',
-                  color: ledError
-                    ? 'rgb(220, 38, 38)'
-                    : ledStatus === 1
-                    ? 'rgb(22, 163, 74)'
-                    : ledStatus === 0
-                    ? 'rgb(37, 99, 235)'
-                    : 'rgb(161, 98, 7)',
-                }}
-              >
-                Live
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Power className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">All OFF</span>
-              </Button>
-              <Button size="sm">
-                <Zap className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">All ON</span>
-              </Button>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${occupancy.bg} shadow-sm backdrop-blur-sm`}>
+              <occupancy.icon className={`h-4 w-4 ${occupancy.color}`} />
+              <span className={`text-sm font-semibold ${occupancy.color}`}>{occupancy.text}</span>
             </div>
           </div>
         </header>
@@ -216,48 +153,15 @@ const Control = () => {
                   )}
 
                   <div className="mt-3 sm:mt-4 flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm">
-                      <Settings2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      Settings
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm">
-                      Schedule
-                    </Button>
+                    {/* Simplified for thesis, removed generic settings/schedule buttons */}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-
-          {/* Scenes */}
-          <Card>
-            <CardHeader className="pb-2 sm:pb-4 md:pb-6">
-              <CardTitle className="text-sm sm:text-base md:text-lg">Quick Scenes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4">
-                {[
-                  { name: "Morning", desc: "Lights ON", icon: "🌅" },
-                  { name: "Away", desc: "All OFF", icon: "🏃" },
-                  { name: "Night", desc: "Motion ON", icon: "🌙" },
-                  { name: "Party", desc: "All lights", icon: "🎉" },
-                ].map((scene) => (
-                  <Button 
-                    key={scene.name} 
-                    variant="outline" 
-                    className="h-auto flex-col py-3 sm:py-4"
-                  >
-                    <span className="text-xl sm:text-2xl mb-1">{scene.icon}</span>
-                    <span className="text-xs sm:text-sm font-medium">{scene.name}</span>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">{scene.desc}</span>
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
-      </main>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

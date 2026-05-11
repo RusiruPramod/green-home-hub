@@ -1,194 +1,174 @@
-# Green Home Hub - Full Stack IoT Application
+# Smart IoT Energy Management System
+### Tourist Accommodation Energy Management — Research Group 12
 
-Complete MERN stack application for smart home monitoring with IoT devices.
+A 2-tier IoT-based Energy Management System for Sri Lankan tourist accommodations (SMEs), built as part of an ICT 481-6 Capstone project. The system uses a hybrid occupancy detection algorithm to automate energy-saving actions and calculate real-time LKR costs using CEB Time-of-Use tariffs.
 
-## 🚀 Quick Start Guide
+---
 
-> **First time?** Start with [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) to configure Firebase in 5 minutes.
+## Architecture Overview
+
+```
+ESP32 Edge Node  →  Firebase Realtime Database  →  React Web Dashboard
+  (Sensors +             (Live sync,                (Hotel Admin +
+   Relays)               history, alerts)            Super Admin)
+```
+
+### 2-Tier Role System
+
+| Tier | Role | Access |
+|------|------|--------|
+| **Tier 1** | Super Admin (System Provider) | Manages all hotel properties, sets global CEB tariff rates |
+| **Tier 2** | Hotel Admin (Hotel Manager) | Monitors their property, controls devices, views analytics |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend Framework | React 18 + TypeScript + Vite |
+| Styling | Tailwind CSS + shadcn-ui |
+| Charts | Recharts |
+| Icons | lucide-react |
+| Routing | react-router-dom |
+| Database | Firebase Realtime Database |
+| Auth (planned) | Firebase Authentication (Custom Claims) |
+
+---
+
+## Quick Start
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- MongoDB (local or MongoDB Atlas)
-- npm or yarn
+- Node.js v18 or higher
+- Firebase project (already configured — see `.env`)
 
 ### 1. Install Dependencies
-
-**Backend:**
-```bash
-cd backend
-npm install
-```
-
-**Frontend:**
 ```bash
 npm install
 ```
 
-### 2. Configure Environment Variables
-
-The `.env` and `.env.local` files are already created in the root directory.
-
-For Firebase Realtime Database, add these variables:
-
+### 2. Environment Variables
+The `.env` file is already configured. It should contain:
 ```env
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_DATABASE_URL=https://your_project-default-rtdb.firebaseio.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_DATABASE_URL=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
 ```
 
-**📖 See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for detailed steps to get these credentials.**
-
-### 3. Start MongoDB
-Make sure MongoDB is running on your system
-
-### 4. Start the Servers
-
-**Terminal 1 - Backend Server:**
-```bash
-cd backend
-npm run dev
-```
-Backend will run on: `http://localhost:5000`
-
-**Terminal 2 - Frontend Development Server:**
+### 3. Run Development Server
 ```bash
 npm run dev
 ```
-Frontend will run on: `http://localhost:5173`
+App runs at: `http://localhost:8080`
 
-## 📁 Project Structure
+---
 
-- `backend/` - Node.js + Express + MongoDB backend
-- `src/` - React + TypeScript + Vite frontend
-- `src/services/` - API integration layer
-- `src/hooks/` - Custom React hooks for data fetching
-
-## 🔌 API Endpoints
-
-Visit `/services` page in the application to see all available API endpoints.
-
-## 🔥 Firebase Realtime Database
-
-The app now supports live data using Firebase RTDB with this structure:
+## Firebase Database Structure
 
 ```json
 {
-	"sensors": {
-		"gas": 420,
-		"water": 62,
-		"voltage": 229.4,
-		"current": 1.46,
-		"power": 335,
-		"motion": false,
-		"flowRate": 11.2,
-		"updatedAt": 1712472450000
-	},
-	"devices": {
-		"light": true,
-		"pump": false,
-		"fan": true,
-		"motionDetection": true,
-		"updatedAt": 1712472450000
-	},
-	"alerts": {
-		"-Nx123abc": {
-			"type": "warning",
-			"title": "Low Water Level",
-			"message": "Water tank level is 24% (threshold < 30%).",
-			"source": "water",
-			"acknowledged": false,
-			"createdAt": 1712472450000
-		}
-	}
+  "globalSettings": {
+    "tariffs": {
+      "category": "H-2",
+      "currency": "LKR",
+      "fixedCharge": 5000,
+      "offPeak": { "start": "22:30", "end": "05:30", "rate": 12.00 },
+      "day":     { "start": "05:30", "end": "18:30", "rate": 15.00 },
+      "peak":    { "start": "18:30", "end": "22:30", "rate": 28.00 },
+      "updatedAt": 1715000000
+    }
+  },
+  "properties": {
+    "property_001": {
+      "rooms": {
+        "room_101": {
+          "latest": { "voltage": 230.4, "energy": 2.8, "pir": true, "doorOpen": false, "occupancyState": "OCCUPIED_ACTIVE" },
+          "devices": { "lights": true, "waterPump": false, "exhaustFan": true }
+        }
+      },
+      "alerts": { "alert_id": { "type": "gas", "acknowledged": false } },
+      "history": { "reading_id": { "energy": 2.8, "createdAt": 1715000000 } },
+      "evaluation": { "baseline": {}, "automated": {} }
+    }
+  }
 }
 ```
 
-Service functions are in `src/services/realtimeDbService.ts`:
+---
 
-- `listenSensors()`
-- `listenDevices()`
-- `updateDevice(deviceId, state)`
-- `pushAlert(alert)`
+## Current Routes (Hotel Admin Dashboard)
 
-Additional helpers are included for alerts page actions:
+| Route | Page | Status |
+|-------|------|--------|
+| `/` | Dashboard — Live overview | ✅ Live |
+| `/energy` | Energy monitoring | ✅ Live |
+| `/water` | Water level & pump | ✅ Live |
+| `/gas` | Gas & safety | ✅ Live |
+| `/control` | Device management | ✅ Live |
+| `/alerts` | Alert management | ✅ Live |
+| `/analytics` | Charts & history | ✅ Live (Firebase) |
+| `/settings/tariffs` | Tariff configuration | ✅ Live (Firebase) |
+| `/settings` | Dashboard settings | ✅ Live |
+| `/evaluation` | Thesis experiment module | 🔲 Phase 4 |
+| `/login` | Role-based auth | 🔲 Phase 5 |
+| `/super-admin/*` | Super Admin portal | 🔲 Phase 5 |
 
-- `listenAlerts()`
-- `acknowledgeAlert()`
-- `deleteAlert()`
-- `clearAlerts()`
+---
 
-## Project info
+## Key Services & Hooks
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+| File | Purpose |
+|------|---------|
+| `src/services/firebase.ts` | Firebase app init |
+| `src/services/realtimeDbService.ts` | All Firebase read/write operations |
+| `src/services/occupancyLogic.ts` | 7-state room occupancy state machine |
+| `src/services/automationService.ts` | Auto-shed devices on vacancy, logs `automated: true` |
+| `src/services/costCalculator.ts` | Dynamic ToU cost engine (LKR per kWh) |
+| `src/hooks/useFirebaseRealtime.ts` | Live sensor data hook |
+| `src/hooks/useHistoryData.ts` | Historical data aggregation from Firebase |
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Occupancy State Machine
 
-**Use Lovable**
+The hybrid occupancy detection algorithm (PIR + Reed Switch) uses 7 states:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+VACANT → ENTRY_DETECTED → OCCUPIED_ACTIVE
+                                ↓
+                         OCCUPIED_IDLE → OCCUPIED_SLEEPING
+                                ↓
+                         EXIT_PENDING → VACANT_CONFIRMED → VACANT
 ```
 
-**Edit a file directly in GitHub**
+On `VACANT_CONFIRMED`: `automationService.ts` automatically turns off lights, fan, and non-essential devices.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## CEB Tariff Rates (H-2 Hotel Category — May 2026)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+| Block | Time | Rate |
+|-------|------|------|
+| Off-Peak | 22:30 – 05:30 | LKR 12.00/kWh |
+| Day | 05:30 – 18:30 | LKR 15.00/kWh |
+| Peak | 18:30 – 22:30 | LKR 28.00/kWh |
+| Fixed Monthly | — | LKR 5,000 |
 
-## What technologies are used for this project?
+> Rates are exempted from the May 2026 18% PUCSL hike (H-1/H-2 hotel exemption).
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Project Phases
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Security & Stabilization | ✅ Done |
+| 2 | Data Model & Occupancy Logic | ✅ Done |
+| 3 | Cost, Tariffs & Analytics | ✅ Done |
+| 4 | Evaluation Module (Thesis) | 🔲 Next |
+| 5 | 2-Tier Auth & Super Admin | 🔲 Planned |
+| 6 | ESP32 Firmware | 🔲 Planned |
