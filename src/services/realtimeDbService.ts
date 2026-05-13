@@ -23,6 +23,7 @@ export interface SensorsPayload {
   lightLevel: number;
   waterLevel: number;
   flowRate: number;
+  totalLiters: number;
   relayStatus: boolean;
   buzzerStatus: boolean;
   occupancyState?: string;
@@ -67,6 +68,7 @@ const sensorDefaults: SensorsPayload = {
   lightLevel: 0,
   waterLevel: 0,
   flowRate: 0,
+  totalLiters: 0,
   relayStatus: false,
   buzzerStatus: false,
   occupancyState: "VACANT",
@@ -99,7 +101,8 @@ export const listenSensors = (
   onError?: (error: Error) => void
 ): Unsubscribe => {
   checkFirebaseInit();
-  const sensorsRef = ref(realtimeDb!, "properties/property_001/rooms/room_101/latest");
+  // Match ESP32 firmware path: properties/property_001/rooms/room_001/latest
+  const sensorsRef = ref(realtimeDb!, "properties/property_001/rooms/room_001/latest");
 
   return onValue(
     sensorsRef,
@@ -121,7 +124,8 @@ export const listenDevices = (
   onError?: (error: Error) => void
 ): Unsubscribe => {
   checkFirebaseInit();
-  const devicesRef = ref(realtimeDb!, "properties/property_001/rooms/room_101/devices");
+  // Match ESP32 firmware path: properties/property_001/rooms/room_001/devices
+  const devicesRef = ref(realtimeDb!, "properties/property_001/rooms/room_001/devices");
 
   return onValue(
     devicesRef,
@@ -144,7 +148,8 @@ export const updateDevice = async (
   automated: boolean = false
 ) => {
   checkFirebaseInit();
-  await update(ref(realtimeDb!, "properties/property_001/rooms/room_101/devices"), {
+  // Match ESP32 firmware path: properties/property_001/rooms/room_001/devices
+  await update(ref(realtimeDb!, "properties/property_001/rooms/room_001/devices"), {
     [deviceId]: state,
     updatedAt: serverTimestamp(),
     automatedFlag: automated // For logging/tracking automated changes

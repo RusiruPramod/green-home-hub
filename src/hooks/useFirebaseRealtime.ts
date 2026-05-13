@@ -24,6 +24,7 @@ export interface SensorData {
   lightLevel: number;
   waterLevel: number;
   flowRate: number;
+  totalLiters: number;
   relayStatus: boolean;
   buzzerStatus: boolean;
   occupancyState?: string;
@@ -69,6 +70,7 @@ export function useFirebaseRealtime(): FirebaseRealtimeReturn {
     lightLevel: 0,
     waterLevel: 0,
     flowRate: 0,
+    totalLiters: 0,
     relayStatus: false,
     buzzerStatus: false,
     occupancyState: "VACANT",
@@ -97,6 +99,15 @@ export function useFirebaseRealtime(): FirebaseRealtimeReturn {
     try {
       const offSensors = listenSensors(
         (data) => {
+          // Log water sensor updates for debugging
+          if (data.waterLevel !== undefined || data.flowRate !== undefined || data.totalLiters !== undefined) {
+            console.log("💧 Firebase Sensor Update - Water Data:", {
+              waterLevel: data.waterLevel,
+              flowRate: data.flowRate,
+              totalLiters: data.totalLiters,
+              timestamp: new Date().toLocaleTimeString(),
+            });
+          }
           setSensorData({
             voltage: data.voltage,
             current: data.current,
@@ -110,6 +121,7 @@ export function useFirebaseRealtime(): FirebaseRealtimeReturn {
             lightLevel: data.lightLevel,
             waterLevel: data.waterLevel,
             flowRate: data.flowRate,
+            totalLiters: data.totalLiters,
             relayStatus: data.relayStatus,
             buzzerStatus: data.buzzerStatus,
             occupancyState: data.occupancyState,

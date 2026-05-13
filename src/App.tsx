@@ -16,6 +16,7 @@ import TariffSettings from "./pages/TariffSettings";
 import Evaluation from "./pages/Evaluation";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Debug from "./pages/Debug";
 
 // Super Admin Pages
 import SuperAdminOverview from "./pages/superadmin/Overview";
@@ -39,6 +40,7 @@ const App = () => (
             {/* Hotel Admin Routes (Protected) */}
             <Route path="/" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Index /></ProtectedRoute>} />
             <Route path="/water" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Water /></ProtectedRoute>} />
+            <Route path="/debug" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Debug /></ProtectedRoute>} />
             <Route path="/control" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Control /></ProtectedRoute>} />
             <Route path="/alerts" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Alerts /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Analytics /></ProtectedRoute>} />

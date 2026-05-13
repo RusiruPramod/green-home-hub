@@ -1,18 +1,31 @@
 import { Droplets, Waves, TrendingDown, TrendingUp, Timer, AlertTriangle } from "lucide-react";
+import { useEffect } from "react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigger";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { WaterLevelGauge } from "@/components/dashboard/WaterLevelGauge";
 import { useFirebaseRealtime } from "@/hooks/useFirebaseRealtime";
+import { useWaterData } from "@/hooks/useWaterData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
 const Water = () => {
   const { sensorData, deviceStates, toggleDevice } = useFirebaseRealtime();
+  const { todayUsage, weeklyUsage, loading: waterLoading } = useWaterData();
+
+  // Debug: Log when water sensor data updates
+  useEffect(() => {
+    console.log("💧 Water Data Updated:", {
+      waterLevel: sensorData.waterLevel,
+      flowRate: sensorData.flowRate,
+      totalLiters: sensorData.totalLiters,
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }, [sensorData.waterLevel, sensorData.flowRate, sensorData.totalLiters]);
 
   const waterStats = [
-    { label: "Today's Usage", value: "156 L", change: "+8%", positive: false, icon: Droplets },
-    { label: "Flow Rate", value: `${sensorData.flowRate} L/min`, change: "Normal", positive: true, icon: Waves },
+    { label: "Today's Usage", value: `${sensorData.totalLiters.toFixed(2)} L`, change: sensorData.totalLiters > 100 ? "High usage" : "Normal", positive: false, icon: Droplets },
+    { label: "Flow Rate", value: `${sensorData.flowRate.toFixed(2)} L/min`, change: "Real-time", positive: true, icon: Waves },
     { label: "Tank Level", value: `${sensorData.waterLevel}%`, change: sensorData.waterLevel < 30 ? "Low" : "OK", positive: sensorData.waterLevel >= 30, icon: Timer },
     { label: "Pump Status", value: deviceStates.waterPump ? "Running" : "Stopped", change: deviceStates.waterPump ? "Active" : "Idle", positive: deviceStates.waterPump, icon: Droplets },
   ];
@@ -84,7 +97,7 @@ const Water = () => {
                     </div>
                   </div>
                   <Switch
-                    checked={deviceStates.pump}
+                    checked={deviceStates.waterPump}
                     onCheckedChange={() => void toggleDevice("waterPump")}
                   />
                 </div>
@@ -121,22 +134,34 @@ const Water = () => {
             </CardHeader>
             <CardContent>
               <div className="grid gap-2 md:gap-3">
-                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => {
-                  const usage = [145, 162, 138, 156, 178, 198, 156][i];
-                  const percentage = (usage / 200) * 100;
-                  return (
-                    <div key={day} className="flex items-center gap-2 sm:gap-4">
-                      <span className="w-8 sm:w-10 text-xs sm:text-sm text-muted-foreground">{day}</span>
-                      <div className="flex-1 h-2 sm:h-3 rounded-full bg-muted">
-                        <div 
-                          className="h-2 sm:h-3 rounded-full bg-info transition-all" 
-                          style={{ width: `${percentage}%` }} 
-                        />
+                {waterLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-muted-foreground">Loading water usage data...</div>
+                  </div>
+                ) : weeklyUsage.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-muted-foreground">No water usage data available yet</div>
+                  </div>
+                ) : (
+                  weeklyUsage.map((day) => {
+                    const maxUsage = Math.max(...weeklyUsage.map(d => d.usage), 200);
+                    const percentage = (day.usage / maxUsage) * 100;
+                    return (
+                      <div key={day.day} className="flex items-center gap-2 sm:gap-4">
+                        <span className="w-8 sm:w-10 text-xs sm:text-sm text-muted-foreground">{day.day}</span>
+                        <div className="flex-1 h-2 sm:h-3 rounded-full bg-muted">
+                          <div 
+                            className="h-2 sm:h-3 rounded-full bg-info transition-all" 
+                            style={{ width: `${percentage}%` }} 
+                          />
+                        </div>
+                        <span className="w-12 sm:w-16 text-right text-xs sm:text-sm font-medium text-foreground">
+                          {Math.round(day.usage)} L
+                        </span>
                       </div>
-                      <span className="w-12 sm:w-16 text-right text-xs sm:text-sm font-medium text-foreground">{usage} L</span>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </CardContent>
           </Card>

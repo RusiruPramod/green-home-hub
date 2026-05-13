@@ -14,6 +14,7 @@ import {
   Banknote,
   TestTube,
   LogOut,
+  Bug,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useFirebaseRealtime } from "@/hooks/useFirebaseRealtime";
@@ -43,6 +44,7 @@ const navItems = [
   { icon: Bell, label: "Alerts", path: "/alerts" },
   { icon: TestTube, label: "Evaluation", path: "/evaluation" },
   { icon: Banknote, label: "Tariff Info", path: "/settings/tariffs" },
+  { icon: Bug, label: "Firebase Debug", path: "/debug" },
 ];
 
 export function DashboardSidebar() {

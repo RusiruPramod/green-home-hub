@@ -1,4 +1,5 @@
 import { Droplets } from "lucide-react";
+import { useEffect } from "react";
 
 interface WaterLevelGaugeProps {
   level: number;
@@ -6,6 +7,15 @@ interface WaterLevelGaugeProps {
 }
 
 export function WaterLevelGauge({ level, flowRate }: WaterLevelGaugeProps) {
+  // Debug: Log when water level updates
+  useEffect(() => {
+    console.log("🚰 WaterLevelGauge Updated:", {
+      level,
+      flowRate,
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }, [level, flowRate]);
+
   const getWaterColor = () => {
     if (level >= 80) return "from-primary to-accent";
     if (level >= 40) return "from-info to-primary";
