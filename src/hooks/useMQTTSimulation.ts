@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   listenAlerts,
+  listenFlow,
   listenDevices,
   listenSensors,
   listenLEDStatus,
   pushAlert,
   updateDevice,
-  setLEDControl,
   type AlertRecord,
+  type FlowPayload,
   type DevicesPayload,
 } from "../services/realtimeDbService";
 import {
@@ -28,6 +29,8 @@ export interface SensorData {
   water: number;
   motion: boolean;
   flowRate: number;
+  flowTotalLiters: number;
+  flowUpdatedAt: number | null;
   pir: boolean;
   waterLevel: number;
 }
@@ -87,6 +90,8 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     water: 0,
     motion: false,
     flowRate: 0,
+    flowTotalLiters: 0,
+    flowUpdatedAt: null,
     pir: false,
     waterLevel: 0,
   });
@@ -112,7 +117,6 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
   const [occupancyConfidence, setOccupancyConfidence] = useState(0);
   const [estimatedEnergyCost, setEstimatedEnergyCost] = useState(0);
   const [estimatedSavings, setEstimatedSavings] = useState(0);
-  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const thresholdsRef = useRef({ gasDangerActive: false, waterLowActive: false });
   const toggleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const occupancyRef = useRef<OccupancyState>("VACANT");
@@ -196,6 +200,21 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
         }
       );
 
+      const offFlow = listenFlow(
+        (data: FlowPayload) => {
+          setSensorData((prev) => ({
+            ...prev,
+            flowRate: data.rate,
+            flowTotalLiters: data.totalLiters,
+            flowUpdatedAt: data.timestamp ?? Date.now(),
+          }));
+          setError(null);
+        },
+        (listenerError) => {
+          setError(listenerError.message || "Failed to listen to flow sensor.");
+        }
+      );
+
       // Listen to LED status for the indicator only (0 or 1)
       // Does NOT affect light switch control
       const offLED = listenLEDStatus(
@@ -223,6 +242,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
       return () => {
         offSensors();
         offDevices();
+        offFlow();
         offLED();
         offAlerts();
       };
@@ -237,14 +257,6 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
         /* cleanup */
       };
     }
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(Date.now());
-    }, 5000);
-
-    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -311,13 +323,6 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     console.log(`🔄 Toggle ${device}: ${currentState} → ${newState}`);
 
     try {
-      // For light device, update /led (ESP32) 
-      if (device === "light" || device === "lights") {
-        console.log(`⚡ Sending LED control: ${newState ? 1 : 0}`);
-        await setLEDControl(newState);
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      
       // Update device state in Firebase
       console.log(`💾 Updating Firebase device: ${firebaseDeviceId} = ${newState}`);
       await updateDevice(firebaseDeviceId, newState);
@@ -340,14 +345,10 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     }
   }, [deviceStates]);
 
-  const isDataStale = !lastUpdate || currentTime - lastUpdate.getTime() > 15000;
-
   const connectionStatus = error
     ? "disconnected"
     : loading
     ? "connecting"
-    : isDataStale
-    ? "disconnected"
     : "connected";
 
   // Cleanup timeout on unmount

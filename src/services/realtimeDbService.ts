@@ -29,6 +29,12 @@ export interface SensorsPayload {
   updatedAt?: number;
 }
 
+export interface FlowPayload {
+  rate: number;
+  totalLiters: number;
+  timestamp?: number;
+}
+
 export interface DevicesPayload {
   light: boolean;
   pump: boolean;
@@ -72,6 +78,29 @@ const sensorDefaults: SensorsPayload = {
   relayStatus: false,
   buzzerStatus: false,
   flowRate: 0,
+};
+
+const flowDefaults: FlowPayload = {
+  rate: 0,
+  totalLiters: 0,
+};
+
+const normalizeFlowTimestamp = (value: unknown) => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return Date.now();
+  }
+
+  if (numericValue >= 1_000_000_000 && numericValue < 100_000_000_000) {
+    return numericValue * 1000;
+  }
+
+  if (numericValue >= 100_000_000_000) {
+    return numericValue;
+  }
+
+  return Date.now();
 };
 
 const deviceDefaults: DevicesPayload = {
@@ -134,6 +163,31 @@ export const listenDevices = (
       onData({
         ...deviceDefaults,
         ...value,
+      });
+    },
+    (error) => {
+      onError?.(error);
+    }
+  );
+};
+
+export const listenFlow = (
+  onData: (data: FlowPayload) => void,
+  onError?: (error: Error) => void
+): Unsubscribe => {
+  checkFirebaseInit();
+  const flowRef = ref(realtimeDb!, "flow");
+
+  return onValue(
+    flowRef,
+    (snapshot) => {
+      const value = snapshot.val() || {};
+
+      onData({
+        ...flowDefaults,
+        rate: Number(value.rate ?? value.flowRate ?? value.flow_rate ?? 0),
+        totalLiters: Number(value.totalLiters ?? value.total_liters ?? value.total_litre ?? 0),
+        timestamp: normalizeFlowTimestamp(value.timestamp ?? value.updatedAt),
       });
     },
     (error) => {

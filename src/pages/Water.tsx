@@ -6,12 +6,26 @@ import { useMQTTSimulation } from "@/hooks/useMQTTSimulation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
+const formatRelativeTime = (timestamp?: number | null) => {
+  if (!timestamp) return "Waiting for live data";
+
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 5) return "Updated just now";
+  if (seconds < 60) return `Updated ${seconds}s ago`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `Updated ${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  return `Updated ${hours}h ago`;
+};
+
 const Water = () => {
   const { sensorData, deviceStates, toggleDevice } = useMQTTSimulation();
 
   const waterStats = [
-    { label: "Today's Usage", value: "156 L", change: "+8%", positive: false, icon: Droplets },
-    { label: "Flow Rate", value: `${sensorData.flowRate} L/min`, change: "Normal", positive: true, icon: Waves },
+    { label: "Total Flow", value: `${sensorData.flowTotalLiters.toFixed(2)} L`, change: "Live", positive: true, icon: Droplets },
+    { label: "Flow Rate", value: `${sensorData.flowRate.toFixed(2)} L/min`, change: formatRelativeTime(sensorData.flowUpdatedAt), positive: true, icon: Waves },
     { label: "Tank Level", value: `${sensorData.waterLevel}%`, change: sensorData.waterLevel < 30 ? "Low" : "OK", positive: sensorData.waterLevel >= 30, icon: Timer },
     { label: "Pump Status", value: deviceStates.pump ? "Running" : "Stopped", change: deviceStates.pump ? "Active" : "Idle", positive: deviceStates.pump, icon: Droplets },
   ];
@@ -108,6 +122,23 @@ const Water = () => {
                     <span className="text-xs sm:text-sm text-muted-foreground">Stop above 90%</span>
                     <Switch defaultChecked />
                   </div>
+                </div>
+
+                <div className="rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm font-medium text-foreground">Flow Details</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Current Rate</p>
+                      <p className="text-sm sm:text-lg font-bold text-foreground font-mono">{sensorData.flowRate.toFixed(2)} L/min</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Total Liters</p>
+                      <p className="text-sm sm:text-lg font-bold text-foreground font-mono">{sensorData.flowTotalLiters.toFixed(2)} L</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-[10px] sm:text-xs text-muted-foreground">
+                    {formatRelativeTime(sensorData.flowUpdatedAt)}
+                  </p>
                 </div>
               </CardContent>
             </Card>

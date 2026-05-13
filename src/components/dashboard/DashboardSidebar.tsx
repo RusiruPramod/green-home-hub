@@ -32,7 +32,7 @@ const navItems = [
 export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { ledStatus, occupancyState, connectionStatus } = useMQTTSimulation();
+  const { ledStatus, ledError, occupancyState, connectionStatus } = useMQTTSimulation();
 
   return (
     <aside
@@ -116,13 +116,13 @@ export function DashboardSidebar({ isMobile = false }: { isMobile?: boolean }) {
             <span
               className={cn(
                 "absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-sidebar",
-                connectionStatus === "connected"
-                  ? ledStatus === 1
-                    ? "bg-success animate-blink-fast-dot"
-                    : "bg-success"
-                  : connectionStatus === "connecting"
-                  ? "bg-warning animate-pulse"
-                  : "bg-muted-foreground/50",
+                ledError
+                  ? "bg-destructive"
+                  : ledStatus === 1
+                  ? "bg-success animate-blink-fast-dot"
+                  : ledStatus === 0
+                  ? "bg-success"
+                  : "bg-warning animate-pulse",
                 isMobile ? "h-2 w-2 sm:h-2.5 sm:w-2.5" : "h-2 w-2 sm:h-2.5 sm:w-2.5"
               )}
             />
