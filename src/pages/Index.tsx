@@ -10,13 +10,14 @@ import {
 } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigger";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SensorCard } from "@/components/dashboard/SensorCard";
 import { DeviceControl } from "@/components/dashboard/DeviceControl";
 import { EnergyChart } from "@/components/dashboard/EnergyChart";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { WaterLevelGauge } from "@/components/dashboard/WaterLevelGauge";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
-import { useMQTTSimulation } from "@/hooks/useMQTTSimulation";
+import { useFirebaseRealtime } from "@/hooks/useFirebaseRealtime";
 
 const Index = () => {
   const { 
@@ -32,7 +33,7 @@ const Index = () => {
     ledStatus,
     ledError,
     togglingDevices
-  } = useMQTTSimulation();
+  } = useFirebaseRealtime();
 
   // Calculate trends based on previous values (simplified for demo)
   const getTrend = (value: number, baseline: number) => {
@@ -49,19 +50,17 @@ const Index = () => {
   const gasTrend = getTrend(sensorData.gas, 350);
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <SidebarProvider>
       <DashboardSidebar />
       
-      <main className="flex-1 overflow-auto">
+      <SidebarInset>
         {/* Header */}
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
-          <div className="flex items-center gap-2 md:gap-3">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
+          <div className="flex items-center gap-4">
             <MobileSidebarTrigger />
             <div>
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>
-              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">
-                Real-time monitoring & control
-              </p>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">Live Overview</h1>
+              <p className="text-sm text-muted-foreground hidden sm:block">Real-time monitoring & control</p>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
@@ -215,23 +214,23 @@ const Index = () => {
                 <DeviceControl
                   name="Living Room Lights"
                   icon={Lightbulb}
-                  isOn={deviceStates.light}
+                  isOn={deviceStates.lights}
                   isToggling={togglingDevices.has("light")}
-                  onToggle={() => void toggleDevice("light")}
+                  onToggle={() => void toggleDevice("lights")}
                 />
                 <DeviceControl
                   name="Water Pump"
                   icon={Droplets}
-                  isOn={deviceStates.pump}
+                  isOn={deviceStates.waterPump}
                   isToggling={togglingDevices.has("pump")}
-                  onToggle={() => void toggleDevice("pump")}
+                  onToggle={() => void toggleDevice("waterPump")}
                 />
                 <DeviceControl
                   name="Exhaust Fan"
                   icon={Fan}
-                  isOn={deviceStates.fan}
+                  isOn={deviceStates.exhaustFan}
                   isToggling={togglingDevices.has("fan")}
-                  onToggle={() => void toggleDevice("fan")}
+                  onToggle={() => void toggleDevice("exhaustFan")}
                 />
                 <DeviceControl
                   name="Motion Detection"
@@ -247,8 +246,8 @@ const Index = () => {
             <AlertsPanel alerts={alerts} />
           </div>
         </div>
-      </main>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Resources (local only, not pushed to remote)
+resources/
+
+# Documentation & research files (local only)
+*.pdf
+FIREBASE_IMPLEMENTATION_PLAN.md
+FUNCTIONAL_REQUIREMENTS_DOCUMENT.md
+PROJECT_DOCUMENTATION.md
+PROPOSAL_GAP_ANALYSIS_AND_FUNCTIONAL_REQUIREMENTS.md
+SRS.md
+Dynamic Tariff Calculation for SMEs.md

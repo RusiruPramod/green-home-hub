@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { SensorData } from "@/hooks/useMQTTSimulation";
+import type { SensorData } from "@/hooks/useFirebaseRealtime";
 
 interface ChartDataPoint {
   time: string;

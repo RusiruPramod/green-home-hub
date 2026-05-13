@@ -15,25 +15,30 @@ export interface SensorData {
   voltage: number;
   current: number;
   power: number;
+  energy: number;
   gas: number;
-  water: number;
-  motion: boolean;
-  flowRate: number;
   pir: boolean;
+  doorOpen: boolean;
+  temperature: number;
+  humidity: number;
+  lightLevel: number;
   waterLevel: number;
+  flowRate: number;
+  relayStatus: boolean;
+  buzzerStatus: boolean;
+  occupancyState?: string;
 }
 
 export interface DeviceStates {
-  light: boolean;
-  pump: boolean;
-  fan: boolean;
-  motionDetection: boolean;
   lights: boolean;
   waterPump: boolean;
   exhaustFan: boolean;
+  motionDetection: boolean;
+  mainRelay: boolean;
+  buzzer: boolean;
 }
 
-interface MQTTSimulationReturn {
+interface FirebaseRealtimeReturn {
   sensorData: SensorData;
   deviceStates: DeviceStates;
   alerts: AlertRecord[];
@@ -48,36 +53,33 @@ interface MQTTSimulationReturn {
   togglingDevices: Set<string>;
 }
 
-const deviceAliasMap: Record<keyof DeviceStates, keyof Omit<DevicesPayload, "updatedAt">> = {
-  light: "light",
-  pump: "pump",
-  fan: "fan",
-  motionDetection: "motionDetection",
-  lights: "light",
-  waterPump: "pump",
-  exhaustFan: "fan",
-};
+// Removed deviceAliasMap as states now match natively
 
-export function useMQTTSimulation(): MQTTSimulationReturn {
+export function useFirebaseRealtime(): FirebaseRealtimeReturn {
   const [sensorData, setSensorData] = useState<SensorData>({
     voltage: 0,
     current: 0,
     power: 0,
+    energy: 0,
     gas: 0,
-    water: 0,
-    motion: false,
-    flowRate: 0,
     pir: false,
+    doorOpen: false,
+    temperature: 0,
+    humidity: 0,
+    lightLevel: 0,
     waterLevel: 0,
+    flowRate: 0,
+    relayStatus: false,
+    buzzerStatus: false,
+    occupancyState: "VACANT",
   });
   const [deviceStates, setDeviceStates] = useState<DeviceStates>({
-    light: false,
-    pump: false,
-    fan: false,
-    motionDetection: false,
     lights: false,
     waterPump: false,
     exhaustFan: false,
+    motionDetection: false,
+    mainRelay: false,
+    buzzer: false,
   });
   const [alerts, setAlerts] = useState<AlertRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,12 +101,18 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
             voltage: data.voltage,
             current: data.current,
             power: data.power,
+            energy: data.energy,
             gas: data.gas,
-            water: data.water,
-            motion: data.motion,
+            pir: data.pir,
+            doorOpen: data.doorOpen,
+            temperature: data.temperature,
+            humidity: data.humidity,
+            lightLevel: data.lightLevel,
+            waterLevel: data.waterLevel,
             flowRate: data.flowRate,
-            pir: data.motion,
-            waterLevel: data.water,
+            relayStatus: data.relayStatus,
+            buzzerStatus: data.buzzerStatus,
+            occupancyState: data.occupancyState,
           });
           setIsSensorReady(true);
           setLastUpdate(data.updatedAt ? new Date(data.updatedAt) : new Date());
@@ -119,13 +127,12 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
         (data) => {
           console.log("📡 Device state updated from Firebase:", data);
           setDeviceStates({
-            light: data.light,
-            pump: data.pump,
-            fan: data.fan,
+            lights: data.lights,
+            waterPump: data.waterPump,
+            exhaustFan: data.exhaustFan,
             motionDetection: data.motionDetection,
-            lights: data.light,
-            waterPump: data.pump,
-            exhaustFan: data.fan,
+            mainRelay: data.mainRelay,
+            buzzer: data.buzzer,
           });
           setIsDeviceReady(true);
           setError(null);
@@ -183,37 +190,8 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
     setLoading(!(isSensorReady && isDeviceReady));
   }, [isSensorReady, isDeviceReady]);
 
-  useEffect(() => {
-    const checkThresholds = async () => {
-      if (sensorData.gas > 500 && !thresholdsRef.current.gasDangerActive) {
-        thresholdsRef.current.gasDangerActive = true;
-        await pushAlert({
-          type: "danger",
-          title: "Critical Gas Alert",
-          message: `Gas level is ${Math.round(sensorData.gas)} ppm (threshold > 500).`,
-          source: "gas",
-        });
-      } else if (sensorData.gas <= 500) {
-        thresholdsRef.current.gasDangerActive = false;
-      }
-
-      if (sensorData.water < 30 && !thresholdsRef.current.waterLowActive) {
-        thresholdsRef.current.waterLowActive = true;
-        await pushAlert({
-          type: "warning",
-          title: "Low Water Level",
-          message: `Water tank level is ${Math.round(sensorData.water)}% (threshold < 30%).`,
-          source: "water",
-        });
-      } else if (sensorData.water >= 30) {
-        thresholdsRef.current.waterLowActive = false;
-      }
-    };
-
-    void checkThresholds().catch((thresholdError: Error) => {
-      setError(thresholdError.message || "Failed to push threshold alert.");
-    });
-  }, [sensorData.gas, sensorData.water]);
+  // Removed client-side alert pushing to prevent database spam when multiple components mount the hook.
+  // In a real system, alerts should be generated by the ESP32 firmware or a backend service, not the frontend UI.
 
   const toggleDevice = useCallback(async (device: keyof DeviceStates) => {
     // Prevent rapid consecutive clicks on same device
@@ -222,7 +200,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
       return new Set([...prev, device]);
     });
 
-    const firebaseDeviceId = deviceAliasMap[device];
+    const firebaseDeviceId = device;
     const currentState = deviceStates[device];
     const newState = !currentState;
 
@@ -230,7 +208,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
 
     try {
       // For light device, update /led (ESP32) 
-      if (device === "light" || device === "lights") {
+      if (device === "lights") {
         console.log(`⚡ Sending LED control: ${newState ? 1 : 0}`);
         await setLEDControl(newState);
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -238,7 +216,7 @@ export function useMQTTSimulation(): MQTTSimulationReturn {
       
       // Update device state in Firebase
       console.log(`💾 Updating Firebase device: ${firebaseDeviceId} = ${newState}`);
-      await updateDevice(firebaseDeviceId, newState);
+      await updateDevice(firebaseDeviceId as any, newState);
       setError(null);
       
     } catch (updateError) {

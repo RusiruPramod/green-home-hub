@@ -1,6 +1,7 @@
 import { Bell, AlertTriangle, CheckCircle, Info, Trash2, Filter, Search } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigger";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,20 +116,20 @@ const Alerts = () => {
   const unacknowledgedCount = alerts.filter(a => !a.acknowledged).length;
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <SidebarProvider>
       <DashboardSidebar />
       
-      <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
-          <div className="flex items-center gap-2 md:gap-3">
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
+          <div className="flex items-center gap-4">
             <MobileSidebarTrigger />
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Alerts</h1>
-                <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Notifications & logs</p>
+                <h1 className="text-xl font-bold tracking-tight text-foreground">Alerts</h1>
+                <p className="text-sm text-muted-foreground hidden sm:block">Notifications & logs</p>
               </div>
               {unacknowledgedCount > 0 && (
-                <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-destructive text-[10px] sm:text-xs font-bold text-destructive-foreground">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
                   {unacknowledgedCount}
                 </span>
               )}
@@ -241,8 +242,8 @@ const Alerts = () => {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

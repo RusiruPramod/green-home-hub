@@ -6,29 +6,29 @@
 
 @layer base {
   :root {
-    /* IoT Blue Tech Theme */
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
+    /* Green Smart Home Theme */
+    --background: 150 20% 97%;
+    --foreground: 160 30% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 160 30% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 160 30% 10%;
 
-    /* Blue primary - tech/IoT feel */
-    --primary: 217 91% 60%;
+    /* Emerald green primary */
+    --primary: 152 60% 42%;
     --primary-foreground: 0 0% 100%;
 
-    /* Slate secondary */
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 20%;
+    /* Soft mint secondary */
+    --secondary: 150 18% 93%;
+    --secondary-foreground: 160 30% 20%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 150 14% 93%;
+    --muted-foreground: 160 10% 45%;
 
     /* Teal accent */
-    --accent: 173 58% 39%;
+    --accent: 170 55% 42%;
     --accent-foreground: 0 0% 100%;
 
     /* Alert colors */
@@ -38,59 +38,59 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 0%;
 
-    --success: 142 71% 45%;
+    --success: 152 60% 42%;
     --success-foreground: 0 0% 100%;
 
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --border: 150 14% 89%;
+    --input: 150 14% 89%;
+    --ring: 152 60% 42%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Sidebar - dark for contrast */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
+    /* Sidebar - frosted white-green */
+    --sidebar-background: 150 20% 98%;
+    --sidebar-foreground: 160 30% 20%;
+    --sidebar-primary: 152 60% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 150 18% 93%;
+    --sidebar-accent-foreground: 160 30% 20%;
+    --sidebar-border: 150 14% 89%;
+    --sidebar-ring: 152 60% 42%;
 
-    /* Custom IoT tokens */
-    --sensor-glow: 217 91% 60%;
-    --chart-primary: 217 91% 60%;
-    --chart-secondary: 173 58% 39%;
-    --chart-tertiary: 142 71% 45%;
-    --glass-bg: 0 0% 100% / 0.8;
-    --card-shadow: 0 4px 24px -4px hsl(222 47% 11% / 0.08);
-    --card-shadow-hover: 0 8px 32px -4px hsl(222 47% 11% / 0.12);
+    /* Custom tokens */
+    --sensor-glow: 152 60% 42%;
+    --chart-primary: 152 60% 42%;
+    --chart-secondary: 170 55% 42%;
+    --chart-tertiary: 199 89% 48%;
+    --glass-bg: 0 0% 100% / 0.7;
+    --card-shadow: 0 4px 24px -4px hsl(160 30% 30% / 0.08);
+    --card-shadow-hover: 0 8px 32px -4px hsl(160 30% 30% / 0.14);
   }
 
   .dark {
-    --background: 222 47% 7%;
-    --foreground: 210 40% 98%;
+    --background: 160 25% 7%;
+    --foreground: 150 20% 96%;
 
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: 160 25% 11%;
+    --card-foreground: 150 20% 96%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 160 25% 11%;
+    --popover-foreground: 150 20% 96%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 7%;
+    --primary: 152 60% 45%;
+    --primary-foreground: 160 25% 7%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 160 25% 15%;
+    --secondary-foreground: 150 20% 96%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 160 25% 15%;
+    --muted-foreground: 150 15% 55%;
 
-    --accent: 173 58% 45%;
-    --accent-foreground: 222 47% 7%;
+    --accent: 170 55% 45%;
+    --accent-foreground: 160 25% 7%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -98,30 +98,30 @@
     --warning: 38 92% 55%;
     --warning-foreground: 0 0% 0%;
 
-    --success: 142 71% 50%;
-    --success-foreground: 222 47% 7%;
+    --success: 152 60% 48%;
+    --success-foreground: 160 25% 7%;
 
     --info: 199 89% 55%;
-    --info-foreground: 222 47% 7%;
+    --info-foreground: 160 25% 7%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    --border: 160 25% 17%;
+    --input: 160 25% 17%;
+    --ring: 152 60% 45%;
 
-    --sidebar-background: 222 47% 5%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 222 47% 7%;
-    --sidebar-accent: 217 33% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 12%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-background: 160 25% 5%;
+    --sidebar-foreground: 150 20% 96%;
+    --sidebar-primary: 152 60% 45%;
+    --sidebar-primary-foreground: 160 25% 7%;
+    --sidebar-accent: 160 25% 13%;
+    --sidebar-accent-foreground: 150 20% 96%;
+    --sidebar-border: 160 25% 13%;
+    --sidebar-ring: 152 60% 45%;
 
-    --sensor-glow: 217 91% 60%;
-    --chart-primary: 217 91% 60%;
-    --chart-secondary: 173 58% 45%;
-    --chart-tertiary: 142 71% 50%;
-    --glass-bg: 222 47% 11% / 0.9;
+    --sensor-glow: 152 60% 45%;
+    --chart-primary: 152 60% 45%;
+    --chart-secondary: 170 55% 45%;
+    --chart-tertiary: 199 89% 55%;
+    --glass-bg: 160 25% 11% / 0.9;
     --card-shadow: 0 4px 24px -4px hsl(0 0% 0% / 0.3);
     --card-shadow-hover: 0 8px 32px -4px hsl(0 0% 0% / 0.4);
   }
@@ -142,6 +142,8 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
+    background: linear-gradient(135deg, hsl(150 25% 96%), hsl(160 20% 94%), hsl(140 18% 95%));
+    min-height: 100vh;
   }
 
   .font-mono {
@@ -151,7 +153,7 @@
 
 @layer components {
   .sensor-card {
-    @apply relative overflow-hidden rounded-xl bg-card p-5 transition-all duration-300;
+    @apply relative overflow-hidden rounded-2xl bg-card/80 p-5 transition-all duration-300 backdrop-blur-sm;
     box-shadow: var(--card-shadow);
   }
 
@@ -163,7 +165,7 @@
   .sensor-card::before {
     content: '';
     @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: linear-gradient(135deg, hsl(var(--sensor-glow) / 0.05), transparent);
+    background: linear-gradient(135deg, hsl(var(--sensor-glow) / 0.08), transparent);
   }
 
   .sensor-card:hover::before {
@@ -203,7 +205,7 @@
   }
 
   .glass-panel {
-    @apply rounded-2xl border border-border/50 backdrop-blur-xl;
+    @apply rounded-2xl border border-white/30 backdrop-blur-xl;
     background: hsl(var(--glass-bg));
   }
 

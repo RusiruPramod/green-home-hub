@@ -11,21 +11,31 @@ import {
 import { realtimeDb, initError } from "@/services/firebase";
 
 export interface SensorsPayload {
-  gas: number;
-  water: number;
   voltage: number;
   current: number;
   power: number;
-  motion: boolean;
+  energy: number;
+  gas: number;
+  pir: boolean;
+  doorOpen: boolean;
+  temperature: number;
+  humidity: number;
+  lightLevel: number;
+  waterLevel: number;
   flowRate: number;
+  relayStatus: boolean;
+  buzzerStatus: boolean;
+  occupancyState?: string;
   updatedAt?: number;
 }
 
 export interface DevicesPayload {
-  light: boolean;
-  pump: boolean;
-  fan: boolean;
+  lights: boolean;
+  waterPump: boolean;
+  exhaustFan: boolean;
   motionDetection: boolean;
+  mainRelay: boolean;
+  buzzer: boolean;
   updatedAt?: number;
 }
 
@@ -45,20 +55,30 @@ export interface AlertRecord extends AlertPayload {
 }
 
 const sensorDefaults: SensorsPayload = {
-  gas: 0,
-  water: 0,
   voltage: 0,
   current: 0,
   power: 0,
-  motion: false,
+  energy: 0,
+  gas: 0,
+  pir: false,
+  doorOpen: false,
+  temperature: 0,
+  humidity: 0,
+  lightLevel: 0,
+  waterLevel: 0,
   flowRate: 0,
+  relayStatus: false,
+  buzzerStatus: false,
+  occupancyState: "VACANT",
 };
 
 const deviceDefaults: DevicesPayload = {
-  light: false,
-  pump: false,
-  fan: false,
+  lights: false,
+  waterPump: false,
+  exhaustFan: false,
   motionDetection: false,
+  mainRelay: false,
+  buzzer: false,
 };
 
 const checkFirebaseInit = () => {
@@ -79,7 +99,7 @@ export const listenSensors = (
   onError?: (error: Error) => void
 ): Unsubscribe => {
   checkFirebaseInit();
-  const sensorsRef = ref(realtimeDb!, "sensors");
+  const sensorsRef = ref(realtimeDb!, "properties/property_001/rooms/room_101/latest");
 
   return onValue(
     sensorsRef,
@@ -101,7 +121,7 @@ export const listenDevices = (
   onError?: (error: Error) => void
 ): Unsubscribe => {
   checkFirebaseInit();
-  const devicesRef = ref(realtimeDb!, "devices");
+  const devicesRef = ref(realtimeDb!, "properties/property_001/rooms/room_101/devices");
 
   return onValue(
     devicesRef,
@@ -120,18 +140,20 @@ export const listenDevices = (
 
 export const updateDevice = async (
   deviceId: keyof Omit<DevicesPayload, "updatedAt">,
-  state: boolean
+  state: boolean,
+  automated: boolean = false
 ) => {
   checkFirebaseInit();
-  await update(ref(realtimeDb!, "devices"), {
+  await update(ref(realtimeDb!, "properties/property_001/rooms/room_101/devices"), {
     [deviceId]: state,
     updatedAt: serverTimestamp(),
+    automatedFlag: automated // For logging/tracking automated changes
   });
 };
 
 export const pushAlert = async (alert: AlertPayload) => {
   checkFirebaseInit();
-  const alertsRef = ref(realtimeDb!, "alerts");
+  const alertsRef = ref(realtimeDb!, "properties/property_001/alerts");
   const newAlertRef = push(alertsRef);
 
   await set(newAlertRef, {
@@ -148,7 +170,7 @@ export const listenAlerts = (
   onError?: (error: Error) => void
 ): Unsubscribe => {
   checkFirebaseInit();
-  const alertsRef = ref(realtimeDb!, "alerts");
+  const alertsRef = ref(realtimeDb!, "properties/property_001/alerts");
 
   return onValue(
     alertsRef,
@@ -178,19 +200,19 @@ export const listenAlerts = (
 
 export const acknowledgeAlert = async (alertId: string, acknowledged = true) => {
   checkFirebaseInit();
-  await update(ref(realtimeDb!, `alerts/${alertId}`), {
+  await update(ref(realtimeDb!, `properties/property_001/alerts/${alertId}`), {
     acknowledged,
   });
 };
 
 export const deleteAlert = async (alertId: string) => {
   checkFirebaseInit();
-  await remove(ref(realtimeDb!, `alerts/${alertId}`));
+  await remove(ref(realtimeDb!, `properties/property_001/alerts/${alertId}`));
 };
 
 export const clearAlerts = async () => {
   checkFirebaseInit();
-  await remove(ref(realtimeDb!, "alerts"));
+  await remove(ref(realtimeDb!, "properties/property_001/alerts"));
 };
 
 // Listen to LED status in real-time (syncs from ESP32 feedback)

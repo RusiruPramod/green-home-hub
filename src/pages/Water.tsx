@@ -1,32 +1,33 @@
 import { Droplets, Waves, TrendingDown, TrendingUp, Timer, AlertTriangle } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigger";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { WaterLevelGauge } from "@/components/dashboard/WaterLevelGauge";
-import { useMQTTSimulation } from "@/hooks/useMQTTSimulation";
+import { useFirebaseRealtime } from "@/hooks/useFirebaseRealtime";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
 const Water = () => {
-  const { sensorData, deviceStates, toggleDevice } = useMQTTSimulation();
+  const { sensorData, deviceStates, toggleDevice } = useFirebaseRealtime();
 
   const waterStats = [
     { label: "Today's Usage", value: "156 L", change: "+8%", positive: false, icon: Droplets },
     { label: "Flow Rate", value: `${sensorData.flowRate} L/min`, change: "Normal", positive: true, icon: Waves },
     { label: "Tank Level", value: `${sensorData.waterLevel}%`, change: sensorData.waterLevel < 30 ? "Low" : "OK", positive: sensorData.waterLevel >= 30, icon: Timer },
-    { label: "Pump Status", value: deviceStates.pump ? "Running" : "Stopped", change: deviceStates.pump ? "Active" : "Idle", positive: deviceStates.pump, icon: Droplets },
+    { label: "Pump Status", value: deviceStates.waterPump ? "Running" : "Stopped", change: deviceStates.waterPump ? "Active" : "Idle", positive: deviceStates.waterPump, icon: Droplets },
   ];
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <SidebarProvider>
       <DashboardSidebar />
       
-      <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 flex h-14 sm:h-16 md:h-16 lg:h-20 items-center justify-between border-b border-border bg-background/80 px-3 sm:px-6 md:px-8 lg:px-10 backdrop-blur-lg">
-          <div className="flex items-center gap-2 md:gap-3">
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
+          <div className="flex items-center gap-4">
             <MobileSidebarTrigger />
             <div>
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Water</h1>
-              <p className="text-xs sm:text-sm md:text-base text-muted-foreground hidden sm:block">Tank levels & usage</p>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">Water</h1>
+              <p className="text-sm text-muted-foreground hidden sm:block">Tank levels & usage</p>
             </div>
           </div>
         </header>
@@ -72,19 +73,19 @@ const Water = () => {
               <CardContent className="space-y-4 sm:space-y-6">
                 <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:p-4">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full ${deviceStates.pump ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full ${deviceStates.waterPump ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                       <Droplets className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div>
                       <p className="text-sm sm:text-base font-medium text-foreground">Water Pump</p>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        {deviceStates.pump ? "Running" : "Stopped"}
+                        {deviceStates.waterPump ? "Running" : "Stopped"}
                       </p>
                     </div>
                   </div>
                   <Switch
                     checked={deviceStates.pump}
-                    onCheckedChange={() => void toggleDevice("pump")}
+                    onCheckedChange={() => void toggleDevice("waterPump")}
                   />
                 </div>
 
@@ -140,8 +141,8 @@ const Water = () => {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 
