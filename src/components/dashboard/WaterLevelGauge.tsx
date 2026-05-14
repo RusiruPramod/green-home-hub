@@ -20,6 +20,11 @@ export function WaterLevelGauge({ level, flowRate, onAnimatedLevelChange }: Wate
   const normalizedLevel = Math.max(0, Math.min(100, level));
   const [displayedLevel, setDisplayedLevel] = useState(normalizedLevel);
   const displayedLevelRef = useRef(normalizedLevel);
+  // Residual water fade control: starts when animated fill reaches (near) zero
+  const [residualOpacity, setResidualOpacity] = useState(0);
+  const residualRafRef = useRef<number | null>(null);
+  const residualStartRef = useRef<number | null>(null);
+  const RESIDUAL_FADE_DURATION = 8000; // 8s very slow fade-in
 
   useEffect(() => {
     displayedLevelRef.current = displayedLevel;
@@ -59,6 +64,51 @@ export function WaterLevelGauge({ level, flowRate, onAnimatedLevelChange }: Wate
 
     return () => cancelAnimationFrame(frameId);
   }, [normalizedLevel, onAnimatedLevelChange]);
+
+  // Trigger a very slow fade-in of the residual water when the displayed level reaches zero.
+  useEffect(() => {
+    // Start fade when displayed level is essentially zero
+    const zeroThreshold = 0.1;
+
+    if (displayedLevel <= zeroThreshold) {
+      if (residualRafRef.current == null) {
+        residualStartRef.current = performance.now();
+
+        const step = (now: number) => {
+          const start = residualStartRef.current ?? now;
+          const elapsed = now - start;
+          const progress = Math.min(1, elapsed / RESIDUAL_FADE_DURATION);
+          // easing: cubic-out for smooth gentle start and faster finish
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setResidualOpacity(eased);
+
+          if (progress < 1) {
+            residualRafRef.current = requestAnimationFrame(step);
+          } else {
+            residualRafRef.current = null;
+          }
+        };
+
+        residualRafRef.current = requestAnimationFrame(step);
+      }
+    } else {
+      // If level rises again, cancel any running fade and hide residual quickly
+      if (residualRafRef.current) {
+        cancelAnimationFrame(residualRafRef.current);
+        residualRafRef.current = null;
+      }
+      residualStartRef.current = null;
+      // Smoothly reset opacity to 0
+      setResidualOpacity(0);
+    }
+
+    return () => {
+      if (residualRafRef.current) {
+        cancelAnimationFrame(residualRafRef.current);
+        residualRafRef.current = null;
+      }
+    };
+  }, [displayedLevel]);
 
   const getWaterFillClass = () => {
     if (normalizedLevel === 0) return "from-sky-100 via-sky-200 to-sky-300";
@@ -117,6 +167,18 @@ export function WaterLevelGauge({ level, flowRate, onAnimatedLevelChange }: Wate
               </svg>
             </div>
           </div>
+
+          {/* Residual water at bottom: only render when the slow fade-in has started (residualOpacity > 0) */}
+          {residualOpacity > 0.01 && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-sky-300/70 via-blue-400/50 to-transparent pointer-events-none"
+              style={{
+                // animation speeds up slightly as opacity grows to give urgency when fully visible
+                animation: residualOpacity > 0.5 ? "residual-flow 2.5s ease-in-out infinite" : "residual-flow 5s ease-in-out infinite",
+                opacity: Math.min(0.95, residualOpacity * 0.95)
+              }}
+            />
+          )}
 
           {displayedLevel <= 0.1 && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-950/5">

@@ -327,6 +327,24 @@
     }
   }
 
+  @keyframes residual-flow {
+    0% {
+      transform: translateX(-4px) translateY(-1.5px) scaleY(1.2);
+    }
+    25% {
+      transform: translateX(5px) translateY(0.5px) scaleY(0.9);
+    }
+    50% {
+      transform: translateX(-5px) translateY(1.5px) scaleY(1.25);
+    }
+    75% {
+      transform: translateX(4px) translateY(-0.5px) scaleY(0.85);
+    }
+    100% {
+      transform: translateX(-4px) translateY(-1.5px) scaleY(1.2);
+    }
+  }
+
   @keyframes hand-nudge {
     0%, 100% {
       transform: translateX(0) rotate(0deg);
