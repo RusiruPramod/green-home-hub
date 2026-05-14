@@ -329,19 +329,13 @@
 
   @keyframes residual-flow {
     0% {
-      transform: translateX(-4px) translateY(-1.5px) scaleY(1.2);
-    }
-    25% {
-      transform: translateX(5px) translateY(0.5px) scaleY(0.9);
+      transform: translateX(-1px) translateY(0) scaleY(1);
     }
     50% {
-      transform: translateX(-5px) translateY(1.5px) scaleY(1.25);
-    }
-    75% {
-      transform: translateX(4px) translateY(-0.5px) scaleY(0.85);
+      transform: translateX(1px) translateY(0.4px) scaleY(0.995);
     }
     100% {
-      transform: translateX(-4px) translateY(-1.5px) scaleY(1.2);
+      transform: translateX(-1px) translateY(0) scaleY(1);
     }
   }
 

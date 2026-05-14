@@ -173,8 +173,8 @@ export function WaterLevelGauge({ level, flowRate, onAnimatedLevelChange }: Wate
             <div
               className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-sky-300/70 via-blue-400/50 to-transparent pointer-events-none"
               style={{
-                // animation speeds up slightly as opacity grows to give urgency when fully visible
-                animation: residualOpacity > 0.5 ? "residual-flow 2.5s ease-in-out infinite" : "residual-flow 5s ease-in-out infinite",
+                // very slow, subtle residual weaving: longer durations for gentle motion
+                animation: residualOpacity > 0.5 ? "residual-flow 8s ease-in-out infinite" : "residual-flow 12s ease-in-out infinite",
                 opacity: Math.min(0.95, residualOpacity * 0.95)
               }}
             />
