@@ -1,4 +1,4 @@
-import { Droplets, Waves, TrendingDown, TrendingUp, Timer, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Hand, Droplets, Waves, TrendingDown, TrendingUp, Timer } from "lucide-react";
 import { useEffect } from "react";
 import { useState } from "react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -121,10 +121,18 @@ const Water = () => {
                       </p>
                     </div>
                   </div>
-                  <Switch
-                    checked={deviceStates.waterPump}
-                    onCheckedChange={() => void toggleDevice("waterPump")}
-                  />
+                  <div className="relative flex items-center justify-center">
+                    {isEmergency && !deviceStates.waterPump && (
+                      <div className="pointer-events-none absolute -top-11 right-0 flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-1 text-primary shadow-sm animate-pulse sm:-top-12">
+                        <Hand className="h-3.5 w-3.5 animate-bounce" />
+                        <span className="text-[10px] font-medium uppercase tracking-[0.18em]">Turn On</span>
+                      </div>
+                    )}
+                    <Switch
+                      checked={deviceStates.waterPump}
+                      onCheckedChange={() => void toggleDevice("waterPump")}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2 sm:space-y-3">
