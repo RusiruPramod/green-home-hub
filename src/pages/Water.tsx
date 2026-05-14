@@ -8,6 +8,7 @@ import { useFirebaseRealtime } from "@/hooks/useFirebaseRealtime";
 import { useWaterData } from "@/hooks/useWaterData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Water = () => {
   const { sensorData, deviceStates, toggleDevice } = useFirebaseRealtime();
@@ -23,10 +24,14 @@ const Water = () => {
     });
   }, [sensorData.waterLevel, sensorData.flowRate, sensorData.totalLiters]);
 
+  const waterLevel = Math.max(0, Math.min(100, sensorData.waterLevel));
+  const isEmergency = waterLevel === 0;
+  const isWarning = waterLevel > 0 && waterLevel <= 50;
+
   const waterStats = [
     { label: "Today's Usage", value: `${sensorData.totalLiters.toFixed(2)} L`, change: sensorData.totalLiters > 100 ? "High usage" : "Normal", positive: false, icon: Droplets },
     { label: "Flow Rate", value: `${sensorData.flowRate.toFixed(2)} L/min`, change: "Real-time", positive: true, icon: Waves },
-    { label: "Tank Level", value: `${sensorData.waterLevel}%`, change: sensorData.waterLevel < 30 ? "Low" : "OK", positive: sensorData.waterLevel >= 30, icon: Timer },
+    { label: "Tank Level", value: `${waterLevel}%`, change: isEmergency ? "Emergency" : isWarning ? "Low" : "OK", positive: waterLevel > 50, icon: Timer },
     { label: "Pump Status", value: deviceStates.waterPump ? "Running" : "Stopped", change: deviceStates.waterPump ? "Active" : "Idle", positive: deviceStates.waterPump, icon: Droplets },
   ];
 
@@ -84,6 +89,20 @@ const Water = () => {
                 <CardTitle className="text-sm sm:text-base">Pump Control</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 sm:space-y-6">
+                {isEmergency ? (
+                  <Alert variant="destructive" className="border-destructive/20 bg-destructive/10">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Emergency Water Level</AlertTitle>
+                    <AlertDescription>Tank level is 0%. Refill immediately to avoid downtime.</AlertDescription>
+                  </Alert>
+                ) : isWarning ? (
+                  <Alert className="border-warning/30 bg-warning/10 text-warning-foreground">
+                    <AlertTriangle className="h-4 w-4 text-warning" />
+                    <AlertTitle>Low Water Level</AlertTitle>
+                    <AlertDescription>Tank level has dropped to 50% or below. Start refilling soon.</AlertDescription>
+                  </Alert>
+                ) : null}
+
                 <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:p-4">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full ${deviceStates.waterPump ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
@@ -101,16 +120,6 @@ const Water = () => {
                     onCheckedChange={() => void toggleDevice("waterPump")}
                   />
                 </div>
-
-                {sensorData.waterLevel < 30 && (
-                  <div className="flex items-center gap-2 sm:gap-3 rounded-lg bg-warning/10 p-3 sm:p-4">
-                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-warning shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-warning">Low Water Level</p>
-                      <p className="text-xs text-muted-foreground">Turn on pump</p>
-                    </div>
-                  </div>
-                )}
 
                 <div className="space-y-2 sm:space-y-3">
                   <p className="text-xs sm:text-sm font-medium text-foreground">Auto-Fill</p>
