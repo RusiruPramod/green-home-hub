@@ -1,5 +1,6 @@
 import { Droplets, Waves, TrendingDown, TrendingUp, Timer, AlertTriangle } from "lucide-react";
 import { useEffect } from "react";
+import { useState } from "react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigger";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -13,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const Water = () => {
   const { sensorData, deviceStates, toggleDevice } = useFirebaseRealtime();
   const { todayUsage, weeklyUsage, loading: waterLoading } = useWaterData();
+  const [animatedWaterLevel, setAnimatedWaterLevel] = useState(Math.max(0, Math.min(100, sensorData.waterLevel)));
 
   // Debug: Log when water sensor data updates
   useEffect(() => {
@@ -25,7 +27,7 @@ const Water = () => {
   }, [sensorData.waterLevel, sensorData.flowRate, sensorData.totalLiters]);
 
   const waterLevel = Math.max(0, Math.min(100, sensorData.waterLevel));
-  const isEmergency = waterLevel === 0;
+  const isEmergency = waterLevel === 0 && animatedWaterLevel <= 0.1;
   const isWarning = waterLevel > 0 && waterLevel <= 50;
 
   const waterStats = [
@@ -82,7 +84,11 @@ const Water = () => {
 
           {/* Water Level & Pump Control */}
           <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
-            <WaterLevelGauge level={sensorData.waterLevel} flowRate={sensorData.flowRate} />
+            <WaterLevelGauge
+              level={sensorData.waterLevel}
+              flowRate={sensorData.flowRate}
+              onAnimatedLevelChange={setAnimatedWaterLevel}
+            />
             
             <Card>
               <CardHeader className="pb-2 sm:pb-4">

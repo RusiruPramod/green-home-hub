@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 interface WaterLevelGaugeProps {
   level: number;
   flowRate: number;
+  onAnimatedLevelChange?: (animatedLevel: number) => void;
 }
 
-export function WaterLevelGauge({ level, flowRate }: WaterLevelGaugeProps) {
+export function WaterLevelGauge({ level, flowRate, onAnimatedLevelChange }: WaterLevelGaugeProps) {
   // Debug: Log when water level updates
   useEffect(() => {
     console.log("🚰 WaterLevelGauge Updated:", {
@@ -22,7 +23,8 @@ export function WaterLevelGauge({ level, flowRate }: WaterLevelGaugeProps) {
 
   useEffect(() => {
     displayedLevelRef.current = displayedLevel;
-  }, [displayedLevel]);
+    onAnimatedLevelChange?.(displayedLevel);
+  }, [displayedLevel, onAnimatedLevelChange]);
 
   useEffect(() => {
     let frameId = 0;
@@ -46,6 +48,7 @@ export function WaterLevelGauge({ level, flowRate }: WaterLevelGaugeProps) {
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       const nextLevel = startLevel + (targetLevel - startLevel) * easedProgress;
       setDisplayedLevel(nextLevel);
+      onAnimatedLevelChange?.(nextLevel);
 
       if (progress < 1) {
         frameId = requestAnimationFrame(animate);
@@ -55,7 +58,7 @@ export function WaterLevelGauge({ level, flowRate }: WaterLevelGaugeProps) {
     frameId = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(frameId);
-  }, [normalizedLevel]);
+  }, [normalizedLevel, onAnimatedLevelChange]);
 
   const getWaterFillClass = () => {
     if (normalizedLevel === 0) return "from-sky-100 via-sky-200 to-sky-300";
