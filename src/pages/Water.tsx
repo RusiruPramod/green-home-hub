@@ -123,8 +123,8 @@ const Water = () => {
                   </div>
                   <div className="relative flex items-center justify-center">
                     {isEmergency && !deviceStates.waterPump && (
-                      <div className="pointer-events-none absolute top-full mt-2 right-0 flex items-center gap-1 rounded-full border border-primary/25 bg-background/95 px-2 py-1 text-primary shadow-md ring-1 ring-primary/10">
-                        <Hand className="h-3.5 w-3.5 animate-hand-nudge" />
+                      <div className="pointer-events-none absolute top-full mt-2 right-0 flex items-center gap-1.5 rounded-full border border-primary/25 bg-background/95 px-4 py-1 text-primary shadow-md ring-1 ring-primary/10 whitespace-nowrap">
+                        <Hand className="h-6 w-6 animate-hand-nudge shrink-0" />
                         <span className="text-[9px] font-medium tracking-[0.08em]">Turn on</span>
                       </div>
                     )}
