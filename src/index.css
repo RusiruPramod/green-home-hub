@@ -314,4 +314,16 @@
   .animation-delay-400 {
     animation-delay: 400ms;
   }
+
+  @keyframes water-flow {
+    0% {
+      transform: translateX(-6%) translateY(0);
+    }
+    50% {
+      transform: translateX(6%) translateY(1px);
+    }
+    100% {
+      transform: translateX(-6%) translateY(0);
+    }
+  }
 }

@@ -1,5 +1,5 @@
 import { Droplets } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface WaterLevelGaugeProps {
   level: number;
@@ -17,6 +17,45 @@ export function WaterLevelGauge({ level, flowRate }: WaterLevelGaugeProps) {
   }, [level, flowRate]);
 
   const normalizedLevel = Math.max(0, Math.min(100, level));
+  const [displayedLevel, setDisplayedLevel] = useState(normalizedLevel);
+  const displayedLevelRef = useRef(normalizedLevel);
+
+  useEffect(() => {
+    displayedLevelRef.current = displayedLevel;
+  }, [displayedLevel]);
+
+  useEffect(() => {
+    let frameId = 0;
+    const startLevel = displayedLevelRef.current;
+    const targetLevel = normalizedLevel;
+
+    if (startLevel === targetLevel) {
+      setDisplayedLevel(targetLevel);
+      return;
+    }
+
+    const distance = Math.abs(targetLevel - startLevel);
+    const isFalling = targetLevel < startLevel;
+    const durationMs = isFalling
+      ? Math.min(9000, Math.max(3200, distance * 140))
+      : Math.min(1800, Math.max(700, distance * 50));
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - startTime) / durationMs);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const nextLevel = startLevel + (targetLevel - startLevel) * easedProgress;
+      setDisplayedLevel(nextLevel);
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(animate);
+      }
+    };
+
+    frameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(frameId);
+  }, [normalizedLevel]);
 
   const getWaterFillClass = () => {
     if (normalizedLevel === 0) return "from-sky-100 via-sky-200 to-sky-300";
@@ -37,7 +76,7 @@ export function WaterLevelGauge({ level, flowRate }: WaterLevelGaugeProps) {
     return "Stable";
   };
 
-  const fillLevel = normalizedLevel === 0 ? 0 : Math.max(normalizedLevel, 12);
+  const fillLevel = displayedLevel === 0 ? 0 : Math.max(displayedLevel, 12);
 
   return (
     <div className="sensor-card">
@@ -58,11 +97,14 @@ export function WaterLevelGauge({ level, flowRate }: WaterLevelGaugeProps) {
         {/* Tank Visualization */}
         <div className="relative mx-auto h-32 w-24 overflow-hidden rounded-lg border-2 border-border bg-slate-950/5">
           <div
-            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t ${getWaterFillClass()} transition-all duration-700 ease-out`}
+            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t ${getWaterFillClass()}`}
             style={{ height: `${fillLevel}%` }}
           >
             {/* Wave effect */}
-            <div className="absolute inset-x-0 -top-2 h-4 opacity-50">
+            <div
+              className="absolute inset-x-0 -top-2 h-4 opacity-50"
+              style={{ animation: "water-flow 12s ease-in-out infinite" }}
+            >
               <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="h-full w-full">
                 <path
                   d="M0 10 Q 25 0, 50 10 T 100 10 V 20 H 0 Z"
@@ -92,7 +134,7 @@ export function WaterLevelGauge({ level, flowRate }: WaterLevelGaugeProps) {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg bg-muted/50 p-3 text-center">
-            <p className="text-2xl font-bold text-card-foreground font-mono">{normalizedLevel}%</p>
+            <p className="text-2xl font-bold text-card-foreground font-mono">{Math.round(displayedLevel)}%</p>
             <p className="text-xs text-muted-foreground">Tank Level</p>
           </div>
           <div className="rounded-lg bg-muted/50 p-3 text-center">
