@@ -326,4 +326,21 @@
       transform: translateX(-6%) translateY(0);
     }
   }
+
+  @keyframes hand-nudge {
+    0%, 100% {
+      transform: translateX(0) rotate(0deg);
+    }
+    35% {
+      transform: translateX(-2px) rotate(-8deg);
+    }
+    70% {
+      transform: translateX(1px) rotate(3deg);
+    }
+  }
+
+  .animate-hand-nudge {
+    animation: hand-nudge 1.4s ease-in-out infinite;
+    transform-origin: 80% 30%;
+  }
 }
