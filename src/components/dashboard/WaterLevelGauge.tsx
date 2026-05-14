@@ -1,4 +1,4 @@
-import { Droplets } from "lucide-react";
+import { AlertTriangle, Droplets } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface WaterLevelGaugeProps {
@@ -118,11 +118,11 @@ export function WaterLevelGauge({ level, flowRate, onAnimatedLevelChange }: Wate
             </div>
           </div>
 
-          {normalizedLevel === 0 && (
+          {displayedLevel <= 0.1 && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-950/5">
-              <span className="rounded-full border border-destructive/20 bg-destructive/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-destructive">
-                Emergency
-              </span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-destructive/20 bg-destructive/10 text-destructive shadow-sm animate-pulse">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
             </div>
           )}
           
