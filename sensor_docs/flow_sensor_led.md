@@ -75,14 +75,19 @@ To guarantee robust operation for the Capstone thesis demo, we have successfully
 
 ---
 
-### 🟢 Bug 2 Resolved: Non-Volatile "Today's Usage" via History Aggregation
-*   **The Issue:** The flow sensor node maintains `totalLiters` in volatile RAM. If the ESP32 lost power or rebooted, `totalLiters` reset to `0.0`. Displaying this volatile value directly in the frontend meant that a guest's daily water consumption was completely lost on any node power cycle.
-*   **The Solution (Implemented in React):** We aligned the frontend in [`Water.tsx`](file:///c:/Users/pansi/OneDrive%20-%20SOFTLABS%20INNOVATION%20PVT%20LTD/Desktop/Capstone%20project/green-home-hub/src/pages/Water.tsx) to display the database history-calculated value `todayUsage` (which sums historical database records and is immune to reboot loss) instead of the volatile `sensorData.totalLiters`:
+### 🟢 Bug 2 Resolved: Non-Volatile "Today's Usage" via Hybrid Aggregation Fallback
+*   **The Issue:** The flow sensor node maintains `totalLiters` in volatile RAM. If the ESP32 lost power or rebooted, `totalLiters` reset to `0.0`. Displaying only the database history aggregation `todayUsage` meant that if history was initially empty in Firebase, the display would read `0.00 L` even if active flow was happening.
+*   **The Solution (Implemented in React):** We designed and implemented a hybrid calculation that selects the maximum between the persistent history aggregation (`todayUsage`) and the live hardware counter (`sensorData.totalLiters`):
     ```typescript
     // In src/pages/Water.tsx:
-    { label: "Today's Usage", value: `${todayUsage.toFixed(2)} L`, change: todayUsage > 100 ? "High usage" : "Normal", positive: false, icon: Droplets }
+    const displayTodayUsage = Math.max(todayUsage, sensorData.totalLiters);
+    
+    // In the waterStats array:
+    { label: "Today's Usage", value: `${displayTodayUsage.toFixed(2)} L`, change: displayTodayUsage > 100 ? "High usage" : "Normal", positive: false, icon: Droplets }
     ```
-    This guarantees data persistence across IoT hardware reboots.
+    This guarantees:
+    1. **Instant Accuracy:** Live, real-time pulse-precise updates are rendered immediately (even on empty history).
+    2. **Reboot Protection:** If the ESP32 reboots and its counter drops to `0`, the frontend automatically falls back to rendering the persistent historical aggregated total (`todayUsage`), preventing daily consumption loss.
 
 ---
 

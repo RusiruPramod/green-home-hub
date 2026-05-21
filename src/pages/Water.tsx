@@ -30,8 +30,10 @@ const Water = () => {
   const isEmergency = waterLevel === 0 && animatedWaterLevel <= 0.1;
   const isWarning = waterLevel > 0 && waterLevel <= 50;
 
+  const displayTodayUsage = Math.max(todayUsage, sensorData.totalLiters);
+
   const waterStats = [
-    { label: "Today's Usage", value: `${todayUsage.toFixed(2)} L`, change: todayUsage > 100 ? "High usage" : "Normal", positive: false, icon: Droplets },
+    { label: "Today's Usage", value: `${displayTodayUsage.toFixed(2)} L`, change: displayTodayUsage > 100 ? "High usage" : "Normal", positive: false, icon: Droplets },
     { label: "Flow Rate", value: `${sensorData.flowRate.toFixed(2)} L/min`, change: "Real-time", positive: true, icon: Waves },
     { label: "Tank Level", value: `${waterLevel}%`, change: isEmergency ? "Emergency" : isWarning ? "Low" : "OK", positive: waterLevel > 50, icon: Timer },
     { label: "Pump Status", value: deviceStates.waterPump ? "Running" : "Stopped", change: deviceStates.waterPump ? "Active" : "Idle", positive: deviceStates.waterPump, icon: Droplets },
