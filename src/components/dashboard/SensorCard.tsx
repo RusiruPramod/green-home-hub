@@ -1,5 +1,7 @@
 import { ReactNode } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface SensorCardProps {
   title: string;
@@ -12,6 +14,18 @@ interface SensorCardProps {
   className?: string;
 }
 
+const statusConfig = {
+  online:  { dot: "bg-success", glow: "shadow-[0_0_6px_hsl(var(--success)/0.5)]" },
+  warning: { dot: "bg-warning", glow: "shadow-[0_0_6px_hsl(var(--warning)/0.5)]" },
+  offline: { dot: "bg-destructive", glow: "shadow-[0_0_6px_hsl(var(--destructive)/0.5)]" },
+};
+
+const trendConfig = {
+  up:     { icon: TrendingUp,   color: "text-success" },
+  down:   { icon: TrendingDown, color: "text-destructive" },
+  stable: { icon: Minus,        color: "text-muted-foreground" },
+};
+
 export function SensorCard({
   title,
   value,
@@ -20,59 +34,60 @@ export function SensorCard({
   trend = "stable",
   trendValue,
   status = "online",
-  className = "",
+  className,
 }: SensorCardProps) {
-  const getTrendIcon = () => {
-    switch (trend) {
-      case "up":
-        return <TrendingUp className="h-3.5 w-3.5 text-success" />;
-      case "down":
-        return <TrendingDown className="h-3.5 w-3.5 text-destructive" />;
-      default:
-        return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
-    }
-  };
-
-  const getTrendColor = () => {
-    switch (trend) {
-      case "up":
-        return "text-success";
-      case "down":
-        return "text-destructive";
-      default:
-        return "text-muted-foreground";
-    }
-  };
+  const TrendIcon = trendConfig[trend].icon;
+  const { dot, glow } = statusConfig[status];
 
   return (
-    <div className={`sensor-card ${className}`}>
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+    <Card
+      className={cn(
+        "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
+        className
+      )}
+    >
+      <CardContent className="p-5">
+        {/* Top row: icon + status dot */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
             {icon}
           </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <div className="flex items-baseline gap-1.5">
-              <span className="sensor-value">{value}</span>
-              <span className="text-sm font-medium text-muted-foreground">{unit}</span>
-            </div>
-          </div>
+          <span className={cn("h-2 w-2 rounded-full mt-1.5", dot, glow)} />
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`status-indicator status-${status}`} />
-        </div>
-      </div>
-      
-      {trendValue && (
-        <div className="mt-4 flex items-center gap-1.5 border-t border-border/50 pt-3">
-          {getTrendIcon()}
-          <span className={`text-xs font-medium ${getTrendColor()}`}>
-            {trendValue}
+
+        {/* Label — small, uppercase, tracked */}
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+          {title}
+        </p>
+
+        {/* Value + Unit row */}
+        <div className="flex items-end gap-1.5 leading-none">
+          <span className="font-mono text-[26px] font-bold tracking-tight text-foreground tabular-nums">
+            {value}
           </span>
-          <span className="text-xs text-muted-foreground">vs last hour</span>
+          <span className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">
+            {unit}
+          </span>
         </div>
-      )}
-    </div>
+
+        {/* Trend footer */}
+        {trendValue && trendValue !== "--" && (
+          <div className="mt-3 pt-3 flex items-center gap-1.5 border-t border-border/40">
+            <TrendIcon className={cn("h-3 w-3 shrink-0", trendConfig[trend].color)} />
+            <span className={cn("text-[11px] font-semibold tabular-nums", trendConfig[trend].color)}>
+              {trendValue}
+            </span>
+            <span className="text-[11px] text-muted-foreground">vs baseline</span>
+          </div>
+        )}
+
+        {/* No-data state */}
+        {trendValue === "--" && (
+          <div className="mt-3 pt-3 border-t border-border/40">
+            <span className="text-[11px] text-muted-foreground/60">Awaiting data…</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

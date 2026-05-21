@@ -7,6 +7,8 @@ import {
   Lightbulb,
   Droplets,
   Fan,
+  Thermometer,
+  Wind,
 } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { MobileSidebarTrigger } from "@/components/dashboard/MobileSidebarTrigger";
@@ -17,170 +19,121 @@ import { EnergyChart } from "@/components/dashboard/EnergyChart";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { WaterLevelGauge } from "@/components/dashboard/WaterLevelGauge";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
+import { Separator } from "@/components/ui/separator";
 import { useFirebaseRealtime } from "@/hooks/useFirebaseRealtime";
+import { cn } from "@/lib/utils";
+
+/** Returns a trend only when there is meaningful delta vs a baseline */
+function getTrend(value: number, baseline: number): { trend: "up" | "down" | "stable"; label: string } {
+  if (baseline === 0 || value === 0) return { trend: "stable", label: "--" };
+  const diff = ((value - baseline) / baseline) * 100;
+  if (Math.abs(diff) < 1) return { trend: "stable", label: `${diff.toFixed(1)}%` };
+  return diff > 0
+    ? { trend: "up", label: `+${diff.toFixed(1)}%` }
+    : { trend: "down", label: `${diff.toFixed(1)}%` };
+}
 
 const Index = () => {
-  const { 
-    sensorData, 
-    deviceStates, 
+  const {
+    sensorData,
+    deviceStates,
     alerts,
     loading,
     error,
-    isConnected, 
-    connectionStatus,
+    isConnected,
     lastUpdate,
     toggleDevice,
     ledStatus,
     ledError,
-    togglingDevices
+    togglingDevices,
   } = useFirebaseRealtime();
 
-  // Calculate trends based on previous values (simplified for demo)
-  const getTrend = (value: number, baseline: number) => {
-    const diff = ((value - baseline) / baseline) * 100;
-    if (Math.abs(diff) < 1) return { trend: "stable" as const, value: `${diff.toFixed(1)}%` };
-    return diff > 0 
-      ? { trend: "up" as const, value: `+${diff.toFixed(1)}%` }
-      : { trend: "down" as const, value: `${diff.toFixed(1)}%` };
-  };
+  const voltageTrend     = getTrend(sensorData.voltage,     230);
+  const currentTrend     = getTrend(sensorData.current,     1.5);
+  const powerTrend       = getTrend(sensorData.power,       345);
+  const gasTrend         = getTrend(sensorData.gas,         350);
+  const temperatureTrend = getTrend(sensorData.temperature, 25);
+  const humidityTrend    = getTrend(sensorData.humidity,    55);
 
-  const voltageTrend = getTrend(sensorData.voltage, 230);
-  const currentTrend = getTrend(sensorData.current, 1.5);
-  const powerTrend = getTrend(sensorData.power, 345);
-  const gasTrend = getTrend(sensorData.gas, 350);
+  /* LED indicator colour */
+  const ledColor = ledError
+    ? { bg: "bg-destructive/10 border-destructive/30", dot: "bg-destructive shadow-[0_0_8px_hsl(var(--destructive)/0.5)]", text: "text-destructive" }
+    : ledStatus === 1
+    ? { bg: "bg-success/10 border-success/30",     dot: "bg-success shadow-[0_0_8px_hsl(var(--success)/0.5)]",     text: "text-success" }
+    : ledStatus === 0
+    ? { bg: "bg-info/10 border-info/30",           dot: "bg-info shadow-[0_0_8px_hsl(var(--info)/0.5)]",           text: "text-info" }
+    : { bg: "bg-warning/10 border-warning/30",     dot: "bg-warning shadow-[0_0_8px_hsl(var(--warning)/0.5)]",     text: "text-warning" };
 
   return (
     <SidebarProvider>
       <DashboardSidebar />
-      
+
       <SidebarInset>
-        {/* Header */}
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
-          <div className="flex items-center gap-4">
+        {/* ── Page Header ─────────────────────────────────── */}
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur px-4 sm:px-6">
+          <div className="flex items-center gap-3">
             <MobileSidebarTrigger />
+            <Separator orientation="vertical" className="h-5 hidden sm:block" />
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-foreground">Live Overview</h1>
-              <p className="text-sm text-muted-foreground hidden sm:block">Real-time monitoring & control</p>
+              <h1 className="text-lg font-semibold tracking-tight">Live Overview</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">Real-time monitoring &amp; control</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-            {/* LED Status Indicator (Firebase Real-time LED value) */}
-            <div 
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                paddingLeft: '16px',
-                paddingRight: '16px',
-                paddingTop: '6px',
-                paddingBottom: '6px',
-                borderRadius: '9999px',
-                border: '1px solid',
-                transition: 'all 300ms ease',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                backgroundColor: ledError 
-                  ? 'rgba(239, 68, 68, 0.2)' 
-                  : ledStatus === 1 
-                  ? 'rgba(34, 197, 94, 0.2)'
-                  : ledStatus === 0 
-                  ? 'rgba(59, 130, 246, 0.2)'
-                  : 'rgba(234, 179, 8, 0.2)',
-                borderColor: ledError
-                  ? 'rgba(239, 68, 68, 0.7)'
-                  : ledStatus === 1
-                  ? 'rgba(34, 197, 94, 0.7)'
-                  : ledStatus === 0
-                  ? 'rgba(59, 130, 246, 0.7)'
-                  : 'rgba(234, 179, 8, 0.7)',
-              }}
-            >
-              <span 
-                style={{
-                  display: 'inline-block',
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                  transition: 'all 300ms ease',
-                  backgroundColor: ledError
-                    ? 'rgb(239, 68, 68)'
-                    : ledStatus === 1
-                    ? 'rgb(34, 197, 94)'
-                    : ledStatus === 0
-                    ? 'rgb(59, 130, 246)'
-                    : 'rgb(234, 179, 8)',
-                  boxShadow: ledError
-                    ? '0 0 10px rgba(239, 68, 68, 0.6)'
-                    : ledStatus === 1
-                    ? '0 0 10px rgba(34, 197, 94, 0.6)'
-                    : ledStatus === 0
-                    ? '0 0 10px rgba(59, 130, 246, 0.6)'
-                    : '0 0 10px rgba(234, 179, 8, 0.6)',
-                }} 
-              />
-              <span 
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  transition: 'all 300ms ease',
-                  color: ledError
-                    ? 'rgb(220, 38, 38)'
-                    : ledStatus === 1
-                    ? 'rgb(22, 163, 74)'
-                    : ledStatus === 0
-                    ? 'rgb(37, 99, 235)'
-                    : 'rgb(161, 98, 7)',
-                }}
-              >
-                Live
+
+          <div className="flex items-center gap-3">
+            {/* Connection status pill */}
+            <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all", ledColor.bg)}>
+              <span className={cn("h-2 w-2 rounded-full animate-pulse", ledColor.dot)} />
+              <span className={cn("hidden sm:inline", ledColor.text)}>
+                {ledError ? "Disconnected" : ledStatus === 1 ? "Live" : ledStatus === 0 ? "Standby" : "Connecting"}
               </span>
             </div>
-            {loading && (
-              <span className="text-xs text-muted-foreground hidden md:block">Syncing data...</span>
-            )}
-            {error && (
-              <span className="text-xs text-destructive hidden lg:block">{error}</span>
-            )}
+
             {lastUpdate && (
-              <span className="text-[10px] sm:text-xs text-muted-foreground hidden md:block">
-                {lastUpdate.toLocaleTimeString()}
+              <span className="text-[11px] text-muted-foreground hidden md:block">
+                Updated {lastUpdate.toLocaleTimeString()}
               </span>
+            )}
+
+            {error && (
+              <span className="text-[11px] text-destructive hidden lg:block truncate max-w-[200px]">{error}</span>
             )}
           </div>
         </header>
 
-        {/* Content */}
-        <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 max-w-[2000px] mx-auto">
-          {/* Stats Overview */}
+        {/* ── Page Content ────────────────────────────────── */}
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-screen-2xl mx-auto">
+
+          {/* KPI strip */}
           <StatsOverview />
 
-          {/* Sensor Grid */}
-          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+          {/* Sensor grid */}
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             <SensorCard
               title="Voltage"
-              value={sensorData.voltage}
+              value={sensorData.voltage.toFixed(1)}
               unit="V"
               icon={<Zap className="h-5 w-5" />}
               trend={voltageTrend.trend}
-              trendValue={voltageTrend.value}
+              trendValue={voltageTrend.label}
               status={isConnected ? "online" : "offline"}
             />
             <SensorCard
               title="Current"
-              value={sensorData.current}
+              value={sensorData.current.toFixed(2)}
               unit="A"
               icon={<Activity className="h-5 w-5" />}
               trend={currentTrend.trend}
-              trendValue={currentTrend.value}
+              trendValue={currentTrend.label}
               status={isConnected ? "online" : "offline"}
             />
             <SensorCard
               title="Power"
-              value={sensorData.power}
+              value={sensorData.power.toFixed(0)}
               unit="W"
               icon={<Gauge className="h-5 w-5" />}
               trend={powerTrend.trend}
-              trendValue={powerTrend.value}
+              trendValue={powerTrend.label}
               status={isConnected ? "online" : "offline"}
             />
             <SensorCard
@@ -189,47 +142,67 @@ const Index = () => {
               unit="ppm"
               icon={<Flame className="h-5 w-5" />}
               trend={gasTrend.trend}
-              trendValue={gasTrend.value}
+              trendValue={gasTrend.label}
               status={sensorData.gas > 400 ? "warning" : isConnected ? "online" : "offline"}
             />
-          </div>
-
-          {/* Charts & Water Level */}
-          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-            <div className="md:col-span-2 lg:col-span-2 xl:col-span-2">
-              <EnergyChart sensorData={sensorData} />
-            </div>
-            <WaterLevelGauge 
-              level={sensorData.waterLevel} 
-              flowRate={sensorData.flowRate} 
+            <SensorCard
+              title="Temperature"
+              value={sensorData.temperature.toFixed(1)}
+              unit="°C"
+              icon={<Thermometer className="h-5 w-5" />}
+              trend={temperatureTrend.trend}
+              trendValue={temperatureTrend.label}
+              status={sensorData.temperature > 32 ? "warning" : isConnected ? "online" : "offline"}
+            />
+            <SensorCard
+              title="Humidity"
+              value={sensorData.humidity.toFixed(0)}
+              unit="%"
+              icon={<Wind className="h-5 w-5" />}
+              trend={humidityTrend.trend}
+              trendValue={humidityTrend.label}
+              status={sensorData.humidity > 70 ? "warning" : isConnected ? "online" : "offline"}
             />
           </div>
 
-          {/* Device Controls & Alerts */}
-          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
-            {/* Device Controls */}
-            <div className="space-y-3 sm:space-y-4 md:space-y-5">
-              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-foreground">Device Controls</h2>
-              <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 lg:grid-cols-2">
+          {/* Charts + Water */}
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <EnergyChart sensorData={sensorData} />
+            </div>
+            <WaterLevelGauge
+              level={sensorData.waterLevel}
+              flowRate={sensorData.flowRate}
+            />
+          </div>
+
+          {/* Device Controls + Alerts */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+            {/* Devices */}
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase text-muted-foreground">
+                Device Controls
+              </h2>
+              <div className="grid gap-3 grid-cols-2">
                 <DeviceControl
-                  name="Living Room Lights"
+                  name="Lights"
                   icon={Lightbulb}
                   isOn={deviceStates.lights}
-                  isToggling={togglingDevices.has("light")}
+                  isToggling={togglingDevices.has("lights")}
                   onToggle={() => void toggleDevice("lights")}
                 />
                 <DeviceControl
                   name="Water Pump"
                   icon={Droplets}
                   isOn={deviceStates.waterPump}
-                  isToggling={togglingDevices.has("pump")}
+                  isToggling={togglingDevices.has("waterPump")}
                   onToggle={() => void toggleDevice("waterPump")}
                 />
                 <DeviceControl
                   name="Exhaust Fan"
                   icon={Fan}
                   isOn={deviceStates.exhaustFan}
-                  isToggling={togglingDevices.has("fan")}
+                  isToggling={togglingDevices.has("exhaustFan")}
                   onToggle={() => void toggleDevice("exhaustFan")}
                 />
                 <DeviceControl

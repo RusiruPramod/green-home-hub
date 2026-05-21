@@ -14,6 +14,7 @@ import Alerts from "./pages/Alerts";
 import Analytics from "./pages/Analytics";
 import TariffSettings from "./pages/TariffSettings";
 import Evaluation from "./pages/Evaluation";
+import Rooms from "./pages/Rooms";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Debug from "./pages/Debug";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/alerts" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Alerts /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Analytics /></ProtectedRoute>} />
             <Route path="/evaluation" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Evaluation /></ProtectedRoute>} />
+            <Route path="/rooms" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><Rooms /></ProtectedRoute>} />
             <Route path="/settings/tariffs" element={<ProtectedRoute allowedRoles={["hotelAdmin", "superadmin"]}><TariffSettings /></ProtectedRoute>} />
             
             {/* Super Admin Routes (Protected) */}

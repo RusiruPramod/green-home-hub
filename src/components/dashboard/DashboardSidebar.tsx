@@ -3,7 +3,6 @@ import {
   Zap,
   Droplets,
   Flame,
-  Lightbulb,
   Bell,
   BarChart3,
   Settings,
@@ -37,14 +36,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Live Overview", path: "/" },
-  { icon: Droplets, label: "Water Monitoring", path: "/water" },
-  { icon: Lightbulb, label: "Room Management", path: "/control" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics" },
-  { icon: Bell, label: "Alerts", path: "/alerts" },
-  { icon: TestTube, label: "Evaluation", path: "/evaluation" },
-  { icon: Banknote, label: "Tariff Info", path: "/settings/tariffs" },
-  { icon: Bug, label: "Firebase Debug", path: "/debug" },
+  { icon: LayoutDashboard, label: "Live Overview",    path: "/" },
+  { icon: Droplets,        label: "Water Monitoring", path: "/water" },
+  { icon: Server,          label: "Room Management",  path: "/rooms" },
+  { icon: BarChart3,       label: "Analytics",        path: "/analytics" },
+  { icon: Bell,            label: "Alerts",           path: "/alerts" },
+  { icon: TestTube,        label: "Evaluation",       path: "/evaluation" },
+  { icon: Banknote,        label: "Tariff Info",      path: "/settings/tariffs" },
+  { icon: Bug,             label: "Firebase Debug",   path: "/debug" },
 ];
 
 export function DashboardSidebar() {

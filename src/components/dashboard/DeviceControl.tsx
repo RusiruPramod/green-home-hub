@@ -1,5 +1,7 @@
 import { Switch } from "@/components/ui/switch";
+import { Card, CardContent } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DeviceControlProps {
   name: string;
@@ -17,26 +19,39 @@ export function DeviceControl({
   isToggling = false,
 }: DeviceControlProps) {
   return (
-    <div className={`sensor-card flex items-center justify-between transition-all select-none ${isToggling ? "opacity-75 cursor-not-allowed" : ""}`}>
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
-          isOn ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-        }`}>
-          <Icon className="h-5 w-5" />
+    <Card
+      className={cn(
+        "transition-all duration-200 select-none cursor-pointer",
+        isOn && "ring-1 ring-primary bg-primary/5",
+        isToggling && "opacity-60 cursor-not-allowed pointer-events-none"
+      )}
+      onClick={!isToggling ? onToggle : undefined}
+    >
+      <CardContent className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+              isOn ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            )}
+          >
+            <Icon className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground leading-none mb-0.5">{name}</p>
+            <p className={cn("text-xs", isOn ? "text-primary" : "text-muted-foreground")}>
+              {isToggling ? "Updating…" : isOn ? "Active" : "Inactive"}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="font-medium text-card-foreground">{name}</p>
-          <p className={`text-sm ${isOn ? 'text-primary' : 'text-muted-foreground'}`}>
-            {isOn ? 'Active' : 'Inactive'}
-          </p>
-        </div>
-      </div>
-      <Switch
-        checked={isOn}
-        disabled={isToggling}
-        onCheckedChange={onToggle}
-        className="data-[state=checked]:bg-primary"
-      />
-    </div>
+        <Switch
+          checked={isOn}
+          disabled={isToggling}
+          onCheckedChange={onToggle}
+          onClick={(e) => e.stopPropagation()}
+          className="data-[state=checked]:bg-primary"
+        />
+      </CardContent>
+    </Card>
   );
 }
