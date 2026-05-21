@@ -187,6 +187,21 @@ void updateFlowSensorAndFirebase() {
       } else {
         Serial.printf("[Firebase] ✗ Update Failed: %s\n", fbdo.errorReason().c_str());
       }
+
+      // If active flow is detected, push to historical tracking path
+      if (flowRate > 0.0) {
+        FirebaseJson history;
+        history.set("roomId", roomId);
+        history.set("flowRate", flowRate);
+        history.set("createdAt/.sv", "timestamp");
+
+        Serial.println("[Firebase] Active flow detected. Pushing to history...");
+        if (Firebase.RTDB.pushJSON(&fbdo, "properties/" + propertyId + "/history", &history)) {
+          Serial.println("[Firebase] ✓ Successfully pushed flow record to history");
+        } else {
+          Serial.printf("[Firebase] ✗ History push failed: %s\n", fbdo.errorReason().c_str());
+        }
+      }
     }
   }
 }
