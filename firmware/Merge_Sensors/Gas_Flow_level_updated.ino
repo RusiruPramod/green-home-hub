@@ -1,3 +1,4 @@
+
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
 #include "addons/TokenHelper.h"
@@ -75,6 +76,14 @@ const int RELAY_PIN = 26;
 int gasPpm = 0;
 unsigned long lastGasRead = 0;
 
+// Gas safety state
+bool gasDanger = false;
+bool gasAlertActive = false;
+
+// Hysteresis
+const int GAS_DANGER_ON_THRESHOLD = 400;
+const int GAS_DANGER_OFF_THRESHOLD = 350;
+
 // ======================
 // Firebase Timing
 // ======================
@@ -96,17 +105,22 @@ void IRAM_ATTR pulseCounter() {
 // WATER SENSOR HELPERS
 // ======================
 int readWaterSensor() {
+
   long total = 0;
+
   for (int i = 0; i < 20; i++) {
     total += analogRead(WATER_SENSOR_PIN);
     delay(5);
   }
+
   return total / 20;
 }
 
 int getWaterPercent(int raw) {
+
   float percent =
-    ((float)(raw - DRY_VALUE) / (WET_VALUE - DRY_VALUE)) * 100.0;
+    ((float)(raw - DRY_VALUE) /
+    (WET_VALUE - DRY_VALUE)) * 100.0;
 
   return constrain((int)percent, 0, 100);
 }
@@ -125,7 +139,11 @@ void setup() {
   digitalWrite(ledPin, LOW);
 
   pinMode(flowPin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(flowPin), pulseCounter, RISING);
+  attachInterrupt(
+    digitalPinToInterrupt(flowPin),
+    pulseCounter,
+    RISING
+  );
 
   pinMode(WATER_SENSOR_PIN, INPUT);
 
@@ -146,12 +164,19 @@ void setup() {
 
   unsigned long wifiStart = millis();
 
-  while (WiFi.status() != WL_CONNECTED && millis() - wifiStart < 20000) {
+  while (
+    WiFi.status() != WL_CONNECTED &&
+    millis() - wifiStart < 20000
+  ) {
     delay(500);
     Serial.print(".");
   }
 
-  Serial.println(WiFi.status() == WL_CONNECTED ? "\nWiFi Connected" : "\nWiFi Failed");
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi Connected");
+  } else {
+    Serial.println("\nWiFi Failed");
+  }
 
   // ======================
   // FIREBASE
@@ -163,7 +188,9 @@ void setup() {
     signupOK = true;
     Serial.println("Firebase Signup OK");
   } else {
-    Serial.println(config.signer.signupError.message.c_str());
+    Serial.println(
+      config.signer.signupError.message.c_str()
+    );
   }
 
   config.token_status_callback = tokenStatusCallback;
@@ -188,15 +215,27 @@ void updateLED() {
       bool state = fbdoLED.boolData();
 
       if (state != lastKnownLedState) {
+
         lastKnownLedState = state;
-        digitalWrite(ledPin, state ? HIGH : LOW);
+
+        digitalWrite(
+          ledPin,
+          state ? HIGH : LOW
+        );
       }
+
+    } else {
+
+      Serial.print("LED read failed: ");
+      Serial.println(
+        fbdoLED.errorReason()
+      );
     }
   }
 }
 
 // ======================
-// FLOW (FIXED)
+// FLOW
 // ======================
 void updateFlowReading() {
 
@@ -233,12 +272,18 @@ void updateWaterReading() {
     lastWaterRead = millis();
 
     int raw = readWaterSensor();
-    waterPercent = getWaterPercent(raw);
+
+    waterPercent =
+      getWaterPercent(raw);
+
+    Serial.print("Water Level: ");
+    Serial.print(waterPercent);
+    Serial.println("%");
   }
 }
 
 // ======================
-// GAS + EMERGENCY
+// GAS + SAFETY
 // ======================
 void updateGasReading() {
 
@@ -248,19 +293,141 @@ void updateGasReading() {
 
     int raw = analogRead(GAS_SENSOR_PIN);
 
-    gasPpm = map(raw, 0, 4095, 0, 1000);
+    // Demo-scaled gas level
+    // Not calibrated MQ-2 ppm
+    gasPpm = map(
+      raw,
+      0,
+      4095,
+      0,
+      1000
+    );
 
-    Serial.print("Gas: ");
+    Serial.print("Gas Level: ");
     Serial.println(gasPpm);
 
-    if (gasPpm > 400) {
-      digitalWrite(BUZZER_PIN, HIGH);
-      digitalWrite(RELAY_PIN, HIGH);
-       Serial.println("GAS ALERT: BUZZER ON | RELAY ON");
-    } else {
-      digitalWrite(BUZZER_PIN, LOW);
-      digitalWrite(RELAY_PIN, LOW);
-        Serial.println("GAS NORMAL: BUZZER OFF | RELAY OFF");
+    // ======================
+    // HYSTERESIS
+    // ======================
+    if (
+      !gasDanger &&
+      gasPpm > GAS_DANGER_ON_THRESHOLD
+    ) {
+      gasDanger = true;
+      Serial.println(
+        "Gas danger entered"
+      );
+    }
+
+    if (
+      gasDanger &&
+      gasPpm < GAS_DANGER_OFF_THRESHOLD
+    ) {
+      gasDanger = false;
+      Serial.println(
+        "Gas level normal"
+      );
+    }
+
+    // ======================
+    // LOCAL SAFETY
+    // ======================
+    digitalWrite(
+      BUZZER_PIN,
+      gasDanger ? HIGH : LOW
+    );
+
+    digitalWrite(
+      RELAY_PIN,
+      gasDanger ? HIGH : LOW
+    );
+
+    Serial.print("Buzzer: ");
+    Serial.println(
+      gasDanger ? "ON" : "OFF"
+    );
+
+    Serial.print("Relay: ");
+    Serial.println(
+      gasDanger ? "ON" : "OFF"
+    );
+
+    // ======================
+    // FIREBASE ALERT
+    // ======================
+    if (
+      gasDanger &&
+      !gasAlertActive &&
+      Firebase.ready() &&
+      signupOK
+    ) {
+
+      FirebaseJson alert;
+
+      alert.set(
+        "type",
+        "danger"
+      );
+
+      alert.set(
+        "title",
+        "Gas Danger"
+      );
+
+      alert.set(
+        "message",
+        "Gas level exceeded safe threshold: " +
+        String(gasPpm) +
+        " ppm"
+      );
+
+      alert.set(
+        "source",
+        "gasSensor"
+      );
+
+      alert.set(
+        "acknowledged",
+        false
+      );
+
+      alert.set(
+        "createdAt/.sv",
+        "timestamp"
+      );
+
+      bool alertOk =
+        Firebase.RTDB.pushJSON(
+          &fbdo,
+          "properties/" +
+            propertyId +
+            "/alerts",
+          &alert
+        );
+
+      if (alertOk) {
+
+        gasAlertActive = true;
+
+        Serial.println(
+          "Gas alert pushed"
+        );
+
+      } else {
+
+        Serial.print(
+          "Gas alert failed: "
+        );
+
+        Serial.println(
+          fbdo.errorReason()
+        );
+      }
+    }
+
+    // Recovery reset
+    if (!gasDanger) {
+      gasAlertActive = false;
     }
   }
 }
@@ -270,46 +437,129 @@ void updateGasReading() {
 // ======================
 void uploadLatestTelemetry() {
 
-  if (millis() - lastFirebaseUpload >= FIREBASE_INTERVAL) {
+  if (
+    millis() -
+    lastFirebaseUpload >=
+    FIREBASE_INTERVAL
+  ) {
 
     lastFirebaseUpload = millis();
 
-    if (Firebase.ready() && signupOK) {
+    if (
+      Firebase.ready() &&
+      signupOK
+    ) {
 
       FirebaseJson payload;
 
-      payload.set("flowRate", flowRate);
-      payload.set("totalLiters", totalLiters);
-      payload.set("waterLevel", waterPercent);
+      payload.set(
+        "flowRate",
+        flowRate
+      );
 
-      // GAS (frontend spec)
-      payload.set("gas", gasPpm);
+      payload.set(
+        "totalLiters",
+        totalLiters
+      );
 
-      payload.set("updatedAt/.sv", "timestamp");
+      payload.set(
+        "waterLevel",
+        waterPercent
+      );
 
-      Firebase.RTDB.updateNode(&fbdo, basePath + "/latest", &payload);
+      payload.set(
+        "gas",
+        gasPpm
+      );
+
+      payload.set(
+        "buzzerStatus",
+        gasDanger
+      );
+
+      payload.set(
+        "relayStatus",
+        gasDanger
+      );
+
+      payload.set(
+        "updatedAt/.sv",
+        "timestamp"
+      );
+
+      bool latestOk =
+        Firebase.RTDB.updateNode(
+          &fbdo,
+          basePath +
+          "/latest",
+          &payload
+        );
+
+      if (!latestOk) {
+
+        Serial.print(
+          "Latest update failed: "
+        );
+
+        Serial.println(
+          fbdo.errorReason()
+        );
+      }
 
       // ======================
-      // HISTORY
+      // FLOW HISTORY
       // ======================
       if (flowRate > 0.0) {
 
         FirebaseJson history;
 
-        history.set("roomId", roomId);
-        history.set("flowRate", flowRate);
-        history.set("deltaLiters", pendingHistoryDeltaLiters);
-        history.set("totalLiters", totalLiters);
-        history.set("createdAt/.sv", "timestamp");
-
-        bool ok = Firebase.RTDB.pushJSON(
-          &fbdo,
-          "properties/" + propertyId + "/history",
-          &history
+        history.set(
+          "roomId",
+          roomId
         );
 
-        if (ok) {
+        history.set(
+          "flowRate",
+          flowRate
+        );
+
+        history.set(
+          "deltaLiters",
+          pendingHistoryDeltaLiters
+        );
+
+        history.set(
+          "totalLiters",
+          totalLiters
+        );
+
+        history.set(
+          "createdAt/.sv",
+          "timestamp"
+        );
+
+        bool historyOk =
+          Firebase.RTDB.pushJSON(
+            &fbdo,
+            "properties/" +
+              propertyId +
+              "/history",
+            &history
+          );
+
+        if (historyOk) {
+
           pendingHistoryDeltaLiters = 0.0;
+
+        } else {
+
+          Serial.print(
+            "History push failed: "
+          );
+
+          Serial.println(
+            fbdo.errorReason()
+          );
         }
       }
     }
@@ -327,3 +577,4 @@ void loop() {
   updateGasReading();
   uploadLatestTelemetry();
 }
+
