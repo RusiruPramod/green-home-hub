@@ -266,16 +266,15 @@ properties/property_001/rooms/room_001/led/
 │  ┌──────────────────────────────────────────────────┐   │
 │  │  SENSORS (GPIO/ADC inputs)                       │   │
 │  ├────────────────────────────────────────────────┤   │
-│  │  • Voltage divider (GPIO34)    → voltage        │   │
-│  │  • ACS712 current sensor (A0)  → current        │   │
-│  │  • Power meter (pulse)         → energy         │   │
-│  │  • Gas meter (pulse)           → gas            │   │
-│  │  • PIR sensor (GPIO12)         → pir            │   │
-│  │  • Reed switch (GPIO13)        → doorOpen       │   │
-│  │  • DHT22 (GPIO21)              → temp/humidity  │   │
-│  │  • LDR sensor (A1)             → lightLevel     │   │
-│  │  • Water level analog (A2)     → waterLevel     │   │
-│  │  • Flow meter (GPIO35, pulse)  → flowRate       │   │
+│  │  • PZEM-004T (GPIO16/17)       → voltage/current│   │
+│  │                                  power/energy   │   │
+│  │  • Ultrasonic sensor (GPIO18/19)→ tank level    │   │
+│  │  • Gas sensor (GPIO32)         → gas            │   │
+│  │  • PIR sensor (GPIO27)         → pir            │   │
+│  │  • Door switch (GPIO33)        → doorOpen       │   │
+│  │  • Water level sensor (GPIO34) → waterLevel     │   │
+│  │  • Flow sensor (GPIO35)        → flowRate       │   │
+│  │  • Optional: DHT22/LDR         → temp/light      │   │
 │  └──────────────────────────────────────────────────┘   │
 │            ↓ (every 3 seconds or on event)              │
 │  ┌──────────────────────────────────────────────────┐   │
@@ -358,10 +357,10 @@ Priority sensors needed for full dashboard:
    - Firebase fields: `temperature`, `humidity`
    - Priority: **HIGH** (occupancy & comfort)
 
-2. **Current/Power Sensor** (ACS712 5A or 30A)
-   - Arduino pin: GPIO34 (ADC) or A0
-   - Firebase fields: `current`, `power`, `energy`
-   - Priority: **HIGH** (cost calculation)
+2. **PZEM-004T Meter** (voltage/current/power/energy)
+  - Arduino pins: GPIO16 (RX2), GPIO17 (TX2)
+  - Firebase fields: `voltage`, `current`, `power`, `energy`
+  - Priority: **HIGH** (cost calculation)
 
 3. **Motion Sensor (PIR)** (HC-SR501)
    - Arduino pin: GPIO12 (digital)
@@ -383,10 +382,10 @@ Priority sensors needed for full dashboard:
    - Firebase fields: `lightLevel`
    - Priority: **LOW** (automation enhancement)
 
-7. **Voltage Monitoring** (Voltage divider)
-   - Arduino pin: GPIO32 (ADC) or A4
-   - Firebase fields: `voltage`
-   - Priority: **LOW** (monitoring only)
+7. **Water/flow calibration review** (optional)
+  - Arduino pins: GPIO34 (water level), GPIO35 (flow sensor)
+  - Firebase fields: `waterLevel`, `flowRate`
+  - Priority: **LOW** (tuning only)
 
 ### 📋 FEATURE COMPLETION CHART
 
@@ -438,7 +437,7 @@ Dashboard UI & Visualization:  [████████████████
 
 
 // Sensors
-// DHT dht(DHT_PIN, DHT22);  // Uncomment when temperature/humidity is wired in
+ DHT dht(DHT_PIN, DHT22);  // Uncomment when temperature/humidity is wired in
 FirebaseData firebaseData;
 ```
 
@@ -601,12 +600,11 @@ void loop() {
 
 **What needs to be wired next:**
 1. DHT22 (temp/humidity)
-2. ACS712 (current)
-3. PIR (motion)
-4. Door sensor (magnetic)
-5. Gas meter
-6. Light sensor
-7. Voltage divider
+2. PIR (motion)
+3. Door sensor (magnetic)
+4. Gas meter
+5. Light sensor
+6. Water/flow calibration
 
 ---
 
