@@ -418,19 +418,27 @@ Dashboard UI & Visualization:  [████████████████
 #define FIREBASE_HOST "your-project.firebaseio.com"
 #define FIREBASE_AUTH "your_db_secret"
 
-// Pin definitions
-#define WATER_LEVEL_PIN A0
-#define FLOW_METER_PIN 35
-#define DHT_PIN 21
-#define CURRENT_SENSOR_PIN 34
-#define VOLTAGE_SENSOR_PIN 32
-#define PIR_PIN 12
-#define DOOR_PIN 13
-#define LIGHT_SENSOR_PIN 35
-#define GAS_METER_PIN 36
+// Current ESP32 implementation pin definitions
+#define ONBOARD_LED_PIN 2
+#define PZEM_RX_PIN 16
+#define PZEM_TX_PIN 17
+#define ULTRASONIC_TRIG_PIN 18
+#define ULTRASONIC_ECHO_PIN 19
+#define EXTERNAL_LED_PIN 23
+#define BUZZER_PIN 25
+#define GAS_RELAY_PIN 26
+#define PIR_PIN 27
+#define GAS_SENSOR_PIN 32
+#define DOOR_SWITCH_PIN 33
+#define WATER_LEVEL_PIN 34
+#define FLOW_SENSOR_PIN 35
+
+// Optional sensors not included in the current hardware map:
+ #define DHT_PIN 4
+
 
 // Sensors
-DHT dht(DHT_PIN, DHT22);
+// DHT dht(DHT_PIN, DHT22);  // Uncomment when temperature/humidity is wired in
 FirebaseData firebaseData;
 ```
 
