@@ -417,19 +417,29 @@ Dashboard UI & Visualization:  [████████████████
 #define FIREBASE_HOST "your-project.firebaseio.com"
 #define FIREBASE_AUTH "your_db_secret"
 
-// Current ESP32 implementation pin definitions
-#define ONBOARD_LED_PIN 2
+
+// PZEM Sensor use for power , current , Voltage  take readings 
 #define PZEM_RX_PIN 16
 #define PZEM_TX_PIN 17
-#define ULTRASONIC_TRIG_PIN 18
-#define ULTRASONIC_ECHO_PIN 19
+// Occupancy sensors for human detection logic 
+#define DOOR_SWITCH_PIN 33 // firstly door open after detect Human Entry
+#define PIR_PIN 27 // second detect  Human motion
+#define ULTRASONIC_TRIG_PIN 18  // Third detect human detect like object  distance 
+#define ULTRASONIC_ECHO_PIN 19  // Third detect human detect like object  distance   after that three sensor reding based on decide humnan occupany - that three sensors occupnacy logic 
+
+
+//For Starlink Fast blink Effect 
 #define EXTERNAL_LED_PIN 23
+// For human detection  and  gas detect alert Buzzer is reusable component 
 #define BUZZER_PIN 25
+//For Gas detection after on Relay (Fan-Relay)
 #define GAS_RELAY_PIN 26
-#define PIR_PIN 27
+//For Gas  detection 
 #define GAS_SENSOR_PIN 32
-#define DOOR_SWITCH_PIN 33
+
+//For  Water level Readings
 #define WATER_LEVEL_PIN 34
+//For Water Flow  Readings
 #define FLOW_SENSOR_PIN 35
 
 // Optional sensors not included in the current hardware map:
