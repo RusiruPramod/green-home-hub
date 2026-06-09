@@ -88,7 +88,28 @@ const int BUZZER_PIN = 25;
 const int RELAY_PIN = 26;
 
 int gasPpm = 0;
+int gasRaw = 0;
+int gasBaseline = 0;
+
+bool gasDanger = false;
+bool gasCalibrated = false;
+
+int gasDangerConfirmCount = 0;
+int gasNormalConfirmCount = 0;
+
 unsigned long lastGasRead = 0;
+unsigned long gasWarmupStartedAt = 0;
+
+long gasBaselineTotal = 0;
+int gasBaselineSamples = 0;
+
+const unsigned long GAS_WARMUP_MS = 30000;   // Use 120000+ for final testing.
+const int GAS_BASELINE_SAMPLES = 10;
+const int GAS_SAMPLE_COUNT = 20;
+const int GAS_SIGNAL_SPAN = 900;             // ADC increase mapped to demo level 0-1000.
+const int GAS_DANGER_ON_THRESHOLD = 350;
+const int GAS_DANGER_OFF_THRESHOLD = 220;
+const int GAS_CONFIRM_SAMPLES = 3;
 
 // ======================
 // TIMERS
@@ -129,6 +150,9 @@ void setup() {
   pinMode(WATER_SENSOR_PIN, INPUT);
 
   pinMode(GAS_SENSOR_PIN, INPUT);
+  analogSetPinAttenuation(GAS_SENSOR_PIN, ADC_11db);
+  gasWarmupStartedAt = millis();
+
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(RELAY_PIN, OUTPUT);
 
@@ -246,23 +270,100 @@ void updateWaterReading() {
 // ======================
 // GAS
 // ======================
+int readGasRawAverage() {
+  long total = 0;
+
+  for (int i = 0; i < GAS_SAMPLE_COUNT; i++) {
+    total += analogRead(GAS_SENSOR_PIN);
+    delay(2);
+  }
+
+  return total / GAS_SAMPLE_COUNT;
+}
+
 void updateGasReading() {
 
   if (millis() - lastGasRead >= GAS_INTERVAL) {
 
     lastGasRead = millis();
 
-    int gasState = digitalRead(GAS_SENSOR_PIN);
+    gasRaw = readGasRawAverage();
 
-    if (gasState == LOW) {   // most MQ modules trigger LOW
-      gasPpm = 1000;         // GAS DETECTED
-      digitalWrite(BUZZER_PIN, HIGH);
-      digitalWrite(RELAY_PIN, HIGH);
-    } else {
-      gasPpm = 0;            // NO GAS
+    if (!gasCalibrated) {
+      gasPpm = 0;
+      gasDanger = false;
       digitalWrite(BUZZER_PIN, LOW);
       digitalWrite(RELAY_PIN, LOW);
+
+      if (millis() - gasWarmupStartedAt < GAS_WARMUP_MS) {
+        Serial.print("Gas warmup raw: ");
+        Serial.println(gasRaw);
+        return;
+      }
+
+      gasBaselineTotal += gasRaw;
+      gasBaselineSamples++;
+
+      Serial.print("Gas baseline sample ");
+      Serial.print(gasBaselineSamples);
+      Serial.print("/");
+      Serial.print(GAS_BASELINE_SAMPLES);
+      Serial.print(": ");
+      Serial.println(gasRaw);
+
+      if (gasBaselineSamples < GAS_BASELINE_SAMPLES) {
+        return;
+      }
+
+      gasBaseline = gasBaselineTotal / GAS_BASELINE_SAMPLES;
+      gasCalibrated = true;
+
+      Serial.print("Gas baseline calibrated: ");
+      Serial.println(gasBaseline);
+      return;
     }
+
+    int gasDelta = gasRaw - gasBaseline;
+    gasDelta = max(gasDelta, 0);
+
+    gasPpm = map(gasDelta, 0, GAS_SIGNAL_SPAN, 0, 1000);
+    gasPpm = constrain(gasPpm, 0, 1000);
+
+    if (!gasDanger) {
+      if (gasPpm >= GAS_DANGER_ON_THRESHOLD) {
+        gasDangerConfirmCount++;
+      } else {
+        gasDangerConfirmCount = 0;
+      }
+
+      if (gasDangerConfirmCount >= GAS_CONFIRM_SAMPLES) {
+        gasDanger = true;
+        gasDangerConfirmCount = 0;
+      }
+    } else {
+      if (gasPpm <= GAS_DANGER_OFF_THRESHOLD) {
+        gasNormalConfirmCount++;
+      } else {
+        gasNormalConfirmCount = 0;
+      }
+
+      if (gasNormalConfirmCount >= GAS_CONFIRM_SAMPLES) {
+        gasDanger = false;
+        gasNormalConfirmCount = 0;
+      }
+    }
+
+    digitalWrite(BUZZER_PIN, gasDanger ? HIGH : LOW);
+    digitalWrite(RELAY_PIN, gasDanger ? HIGH : LOW);
+
+    Serial.print("Gas raw: ");
+    Serial.print(gasRaw);
+    Serial.print(" baseline: ");
+    Serial.print(gasBaseline);
+    Serial.print(" level: ");
+    Serial.print(gasPpm);
+    Serial.print(" danger: ");
+    Serial.println(gasDanger ? "YES" : "NO");
   }
 }
 
@@ -283,6 +384,9 @@ void uploadLatestTelemetry() {
       payload.set("totalLiters", totalLiters);
       payload.set("waterLevel", waterPercent);
       payload.set("gas", gasPpm);
+      payload.set("gasRaw", gasRaw);
+      payload.set("gasBaseline", gasBaseline);
+      payload.set("gasDanger", gasDanger);
       payload.set("updatedAt/.sv", "timestamp");
 
       Firebase.RTDB.updateNode(&fbdo, basePath + "/latest", &payload);
