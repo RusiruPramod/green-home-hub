@@ -28,6 +28,7 @@ export interface SensorData {
   relayStatus: boolean;
   buzzerStatus: boolean;
   occupancyState?: string;
+  updatedAt?: number;
 }
 
 export interface DeviceStates {
@@ -39,6 +40,15 @@ export interface DeviceStates {
   buzzer: boolean;
 }
 
+export interface SensorStatus {
+  [key: string]: "online" | "offline";
+  gas: "online" | "offline";
+  temperature: "online" | "offline";
+  humidity: "online" | "offline";
+  water: "online" | "offline";
+  voltage: "online" | "offline";
+}
+
 interface FirebaseRealtimeReturn {
   sensorData: SensorData;
   deviceStates: DeviceStates;
@@ -48,11 +58,16 @@ interface FirebaseRealtimeReturn {
   isConnected: boolean;
   connectionStatus: "connected" | "connecting" | "disconnected";
   lastUpdate: Date | null;
+  sensorStatus: SensorStatus;
   toggleDevice: (device: keyof DeviceStates) => Promise<void>;
   ledStatus: 0 | 1 | null;
   ledError: string | null;
   togglingDevices: Set<string>;
+  isDataStale: boolean;
 }
+
+// Constants for stale data detection
+const DATA_FRESHNESS_THRESHOLD_MS = 30_000; // 30 seconds
 
 // Removed deviceAliasMap as states now match natively
 
@@ -92,8 +107,37 @@ export function useFirebaseRealtime(): FirebaseRealtimeReturn {
   const [ledStatus, setLedStatus] = useState<0 | 1 | null>(null);
   const [ledError, setLedError] = useState<string | null>(null);
   const [togglingDevices, setTogglingDevices] = useState<Set<string>>(new Set());
+  const [sensorStatus, setSensorStatus] = useState<SensorStatus>({
+    gas: "offline",
+    temperature: "offline",
+    humidity: "offline",
+    water: "offline",
+    voltage: "offline",
+  });
+  const [isDataStale, setIsDataStale] = useState(false);
   const thresholdsRef = useRef({ gasDangerActive: false, waterLowActive: false });
   const toggleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper function to determine if data is stale
+  const checkDataFreshness = useCallback((lastUpdateTime: number | undefined) => {
+    if (!lastUpdateTime) return true;
+    const ageMs = Date.now() - lastUpdateTime;
+    return ageMs > DATA_FRESHNESS_THRESHOLD_MS;
+  }, []);
+
+  // Update sensor status based on data freshness
+  const updateSensorStatus = useCallback((lastUpdateTime: number | undefined) => {
+    const stale = checkDataFreshness(lastUpdateTime);
+    const status: SensorStatus = {
+      gas: stale ? "offline" : "online",
+      temperature: stale ? "offline" : "online",
+      humidity: stale ? "offline" : "online",
+      water: stale ? "offline" : "online",
+      voltage: stale ? "offline" : "online",
+    };
+    setSensorStatus(status);
+    setIsDataStale(stale);
+  }, [checkDataFreshness]);
 
   useEffect(() => {
     try {
@@ -125,9 +169,12 @@ export function useFirebaseRealtime(): FirebaseRealtimeReturn {
             relayStatus: data.relayStatus,
             buzzerStatus: data.buzzerStatus,
             occupancyState: data.occupancyState,
+            updatedAt: data.updatedAt,
           });
           setIsSensorReady(true);
           setLastUpdate(data.updatedAt ? new Date(data.updatedAt) : new Date());
+          // Update sensor status based on data freshness
+          updateSensorStatus(data.updatedAt);
           setError(null);
         },
         (listenerError) => {
@@ -270,9 +317,11 @@ export function useFirebaseRealtime(): FirebaseRealtimeReturn {
     isConnected: connectionStatus === "connected",
     connectionStatus,
     lastUpdate,
+    sensorStatus,
     toggleDevice,
     ledStatus,
     ledError,
     togglingDevices,
+    isDataStale,
   };
 }

@@ -191,10 +191,10 @@ function RoomDetailSheet({
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { icon: Thermometer, label: "Temperature", value: `${room.latest.temperature.toFixed(1)}°C`, warn: room.latest.temperature > 32 },
-                  { icon: Wind,        label: "Humidity",    value: `${room.latest.humidity.toFixed(0)}%`,     warn: room.latest.humidity > 70 },
-                  { icon: Zap,         label: "Power",       value: `${room.latest.power.toFixed(0)} W`,       warn: false },
-                  { icon: Flame,       label: "Gas",         value: `${room.latest.gas} ppm`,                  warn: room.latest.gas > 400 },
+                  { icon: Thermometer, label: "Temperature", value: `${displayTemp.toFixed(1)}°C`, warn: tempWarn },
+                  { icon: Wind,        label: "Humidity",    value: `${displayHumid.toFixed(0)}%`,     warn: humidWarn },
+                  { icon: Zap,         label: "Power",       value: `${displayPower.toFixed(0)} W`,       warn: false },
+                  { icon: Flame,       label: "Gas",         value: `${displayGas} ppm`,                  warn: gasWarn },
                 ].map(({ icon: Icon, label, value, warn }) => (
                   <div
                     key={label}
@@ -281,9 +281,16 @@ function RoomCard({
   const occ = occupancyConfig[state] ?? { text: "Unknown", color: "text-muted-foreground", bg: "bg-muted", icon: Eye };
   const OccIcon = occ.icon;
   const isLive = room.latest.updatedAt ? Date.now() - room.latest.updatedAt < 30_000 : false;
-  const tempWarn  = room.latest.temperature > 32;
-  const humidWarn = room.latest.humidity > 70;
-  const gasWarn   = room.latest.gas > 400;
+  
+  // Show 0 for all sensors when data is stale
+  const displayTemp  = isLive ? room.latest.temperature : 0;
+  const displayHumid = isLive ? room.latest.humidity : 0;
+  const displayPower = isLive ? room.latest.power : 0;
+  const displayGas   = isLive ? room.latest.gas : 0;
+  
+  const tempWarn  = displayTemp > 32;
+  const humidWarn = displayHumid > 70;
+  const gasWarn   = displayGas > 400;
   const activeDevices = Object.entries(room.devices).filter(([k, v]) => v && k !== "motionDetection").length;
 
   return (
@@ -340,7 +347,7 @@ function RoomCard({
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Temp</p>
               <p className={cn("font-mono text-sm font-semibold", tempWarn ? "text-warning" : "text-foreground")}>
-                {room.latest.temperature.toFixed(1)}°C
+                {displayTemp.toFixed(1)}°C
               </p>
             </div>
           </div>
@@ -349,7 +356,7 @@ function RoomCard({
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Humidity</p>
               <p className={cn("font-mono text-sm font-semibold", humidWarn ? "text-warning" : "text-foreground")}>
-                {room.latest.humidity.toFixed(0)}%
+                {displayHumid.toFixed(0)}%
               </p>
             </div>
           </div>
@@ -357,7 +364,7 @@ function RoomCard({
             <Zap className="h-4 w-4 shrink-0 text-muted-foreground" />
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Power</p>
-              <p className="font-mono text-sm font-semibold">{room.latest.power.toFixed(0)} W</p>
+              <p className="font-mono text-sm font-semibold">{displayPower.toFixed(0)} W</p>
             </div>
           </div>
           <div className={cn("flex items-center gap-2 p-2.5 rounded-lg bg-muted/40", gasWarn && "bg-destructive/10")}>
@@ -365,7 +372,7 @@ function RoomCard({
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Gas</p>
               <p className={cn("font-mono text-sm font-semibold", gasWarn ? "text-destructive" : "text-foreground")}>
-                {room.latest.gas} ppm
+                {displayGas} ppm
               </p>
             </div>
           </div>
@@ -460,7 +467,12 @@ export default function Rooms() {
   const occupiedCount = rooms.filter((r) =>
     ["OCCUPIED_ACTIVE", "OCCUPIED_IDLE", "OCCUPIED_SLEEPING"].includes(r.latest.occupancyState ?? "")
   ).length;
-  const alertCount = rooms.filter((r) => r.latest.gas > 400 || r.latest.temperature > 32).length;
+  // Only count alerts from live (fresh) data
+  const alertCount = rooms.filter((r) => {
+    const isLive = r.latest.updatedAt ? Date.now() - r.latest.updatedAt < 30_000 : false;
+    if (!isLive) return false;
+    return r.latest.gas > 400 || r.latest.temperature > 32;
+  }).length;
 
   return (
     <SidebarProvider>

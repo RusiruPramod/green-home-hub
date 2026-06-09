@@ -46,6 +46,8 @@ const Index = () => {
     ledStatus,
     ledError,
     togglingDevices,
+    sensorStatus,
+    isDataStale,
   } = useFirebaseRealtime();
 
   const voltageTrend     = getTrend(sensorData.voltage,     230);
@@ -111,57 +113,57 @@ const Index = () => {
           <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             <SensorCard
               title="Voltage"
-              value={sensorData.voltage.toFixed(1)}
+              value={isDataStale ? 0 : sensorData.voltage.toFixed(1)}
               unit="V"
               icon={<Zap className="h-5 w-5" />}
               trend={voltageTrend.trend}
               trendValue={voltageTrend.label}
-              status={isConnected ? "online" : "offline"}
+              status={sensorStatus.voltage}
             />
             <SensorCard
               title="Current"
-              value={sensorData.current.toFixed(2)}
+              value={isDataStale ? 0 : sensorData.current.toFixed(2)}
               unit="A"
               icon={<Activity className="h-5 w-5" />}
               trend={currentTrend.trend}
               trendValue={currentTrend.label}
-              status={isConnected ? "online" : "offline"}
+              status={sensorStatus.voltage}
             />
             <SensorCard
               title="Power"
-              value={sensorData.power.toFixed(0)}
+              value={isDataStale ? 0 : sensorData.power.toFixed(0)}
               unit="W"
               icon={<Gauge className="h-5 w-5" />}
               trend={powerTrend.trend}
               trendValue={powerTrend.label}
-              status={isConnected ? "online" : "offline"}
+              status={sensorStatus.voltage}
             />
             <SensorCard
               title="Gas Level"
-              value={sensorData.gas}
+              value={isDataStale ? 0 : sensorData.gas}
               unit="ppm"
               icon={<Flame className="h-5 w-5" />}
               trend={gasTrend.trend}
               trendValue={gasTrend.label}
-              status={sensorData.gas > 400 ? "warning" : isConnected ? "online" : "offline"}
+              status={isDataStale ? "offline" : sensorData.gas > 400 ? "warning" : "online"}
             />
             <SensorCard
               title="Temperature"
-              value={sensorData.temperature.toFixed(1)}
+              value={isDataStale ? 0 : sensorData.temperature.toFixed(1)}
               unit="°C"
               icon={<Thermometer className="h-5 w-5" />}
               trend={temperatureTrend.trend}
               trendValue={temperatureTrend.label}
-              status={sensorData.temperature > 32 ? "warning" : isConnected ? "online" : "offline"}
+              status={isDataStale ? "offline" : sensorData.temperature > 32 ? "warning" : "online"}
             />
             <SensorCard
               title="Humidity"
-              value={sensorData.humidity.toFixed(0)}
+              value={isDataStale ? 0 : sensorData.humidity.toFixed(0)}
               unit="%"
               icon={<Wind className="h-5 w-5" />}
               trend={humidityTrend.trend}
               trendValue={humidityTrend.label}
-              status={sensorData.humidity > 70 ? "warning" : isConnected ? "online" : "offline"}
+              status={isDataStale ? "offline" : sensorData.humidity > 70 ? "warning" : "online"}
             />
           </div>
 
