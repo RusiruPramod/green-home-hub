@@ -1,7 +1,7 @@
 # Arduino → Firebase Data Specification
 
 **Project:** Green Home Hub  
-**Last Updated:** May 14, 2026  
+**Last Updated:** June 10, 2026  
 **Purpose:** Complete reference for all sensor data, device states, and telemetry flowing from Arduino/ESP32 to Firebase Realtime Database.
 
 ---
@@ -46,23 +46,24 @@ properties/property_001/rooms/room_001/latest/
 
 | Field | Type | Unit | Range | Description | Status |
 |-------|------|------|-------|-------------|--------|
-| `voltage` | number | V | 0–240 | Mains supply voltage | ❌ TODO |
-| `current` | number | A | 0–50 | Total current draw | ❌ TODO |
-| `power` | number | W | 0–10000 | Real-time power consumption | ❌ TODO |
-| `energy` | number | kWh | 0–∞ | Cumulative energy since boot | ❌ TODO |
-| `gas` | number | units | 0–∞ | Gas meter reading | ❌ TODO |
-| `pir` | boolean | — | true/false | Motion detection sensor | ❌ TODO |
-| `doorOpen` | boolean | — | true/false | Door/window open state | ❌ TODO |
-| `temperature` | number | °C | -10–50 | Room temperature | ❌ TODO |
-| `humidity` | number | % | 0–100 | Relative humidity | ❌ TODO |
-| `lightLevel` | number | lux/% | 0–255 | Ambient light sensor | ❌ TODO |
+| `voltage` | number | V | 0–240 | Mains supply voltage | ❌ NOT IMPLEMENTED |
+| `current` | number | A | 0–50 | Total current draw | ❌ NOT IMPLEMENTED |
+| `power` | number | W | 0–10000 | Real-time power consumption | ❌ NOT IMPLEMENTED |
+| `energy` | number | kWh | 0–∞ | Cumulative energy since boot | ❌ NOT IMPLEMENTED |
+| `gas` | number | ppm | 0–1000 | Gas sensor reading (MQ series) | ✅ WORKING |
+| `pir` | boolean | — | true/false | Motion detection sensor | ❌ NOT IMPLEMENTED |
+| `doorOpen` | boolean | — | true/false | Door/window open state | ✅ WORKING (doorState) |
+| `temperature` | number | °C | -10–50 | Room temperature | ✅ WORKING |
+| `humidity` | number | % | 0–100 | Relative humidity | ✅ WORKING |
+| `lightLevel` | number | lux/% | 0–255 | Ambient light sensor | ❌ NOT IMPLEMENTED |
 | `waterLevel` | number | % | 0–100 | Tank level percentage | ✅ WORKING |
 | `flowRate` | number | L/min | 0–50 | Current water flow rate | ✅ WORKING |
 | `totalLiters` | number | L | 0–∞ | Cumulative water consumed | ✅ WORKING |
-| `relayStatus` | boolean | — | true/false | Main relay state | ❌ TODO |
-| `buzzerStatus` | boolean | — | true/false | Buzzer/alarm state | ❌ TODO |
+| `motionDetected` | boolean | — | true/false | PIR sensor state | ✅ WORKING |
+| `humanPresent` | boolean | — | true/false | Human detection (PIR + Ultrasonic) | ✅ WORKING |
+| `relayActive` | boolean | — | true/false | Relay 2 state (human presence) | ✅ WORKING |
 | `occupancyState` | string | — | See below | Room occupancy status | ✅ CALCULATED |
-| `updatedAt` | number | ms | Unix timestamp | Last update time | ⚠️ OPTIONAL |
+| `updatedAt` | number | ms | Unix timestamp | Last update time | ✅ FIREBASE SERVER TIMESTAMP |
 
 ### occupancyState Values
 ```typescript
@@ -72,26 +73,31 @@ properties/property_001/rooms/room_001/latest/
 "AWAY"        // User configured (manual override)
 ```
 
-### Example Firebase JSON
+### Example Firebase JSON (Current Implementation)
+```json
+{
+  "flowRate": 2.3,
+  "totalLiters": 450,
+  "waterLevel": 75,
+  "gas": 320,
+  "doorState": 1,
+  "motionDetected": true,
+  "humanPresent": true,
+  "relayActive": true,
+  "temperature": 24.5,
+  "humidity": 55,
+  "updatedAt": 1715694000000
+}
+```
+
+### Future Fields (NOT YET IMPLEMENTED)
 ```json
 {
   "voltage": 230,
   "current": 2.5,
   "power": 575,
   "energy": 45.23,
-  "gas": 120,
-  "pir": true,
-  "doorOpen": false,
-  "temperature": 24.5,
-  "humidity": 55,
-  "lightLevel": 180,
-  "waterLevel": 75,
-  "flowRate": 2.3,
-  "totalLiters": 450,
-  "relayStatus": true,
-  "buzzerStatus": false,
-  "occupancyState": "OCCUPIED",
-  "updatedAt": 1715694000000
+  "lightLevel": 180
 }
 ```
 
@@ -333,69 +339,63 @@ properties/property_001/rooms/room_001/led/
 ## Integration Status
 
 ### ✅ FULLY WORKING
-- [x] Water level sensor (0–100%)
-- [x] Water flow rate (L/min) with pulse counter
+Current `Occ_Buz_Gas_Flow_Level.ino` implementation:
+- [x] Water level sensor (0–100%) - GPIO34
+- [x] Water flow rate (L/min) with pulse counter - GPIO35
 - [x] Cumulative water usage (totalLiters)
-- [x] Water pump control (relay + feedback)
+- [x] Gas sensor (ppm) - GPIO32 (MQ series)
+- [x] Door/window sensor - GPIO33 (INPUT_PULLUP)
+- [x] PIR motion sensor - GPIO27
+- [x] Ultrasonic distance sensor - GPIO18/19 (human detection logic)
 - [x] Firebase Realtime DB connection
-- [x] Basic alert system
-- [x] Device control states (lights, fan, pump, relay, buzzer)
-- [x] LED control (on/off)
-- [x] Real-time dashboard updates
-- [x] Water usage history aggregation
-- [x] Occupancy state calculation
+- [x] Occupancy detection (door + PIR + ultrasonic combination)
+- [x] Real-time telemetry upload (every 3 seconds)
+- [x] Water usage history logging
+- [x] Buzzer alerts (GPIO25) - gas/motion/door
+- [x] Gas relay control (GPIO26) - activates on gas > 300 ppm
+- [x] Human presence relay (GPIO14) - controls Relay 2
+- [x] External LED status indicator (GPIO23) - WiFi & Firebase feedback
+- [x] Occupancy event logging to Firebase
+- [x] Temperature sensor - reads room temperature
+- [x] Humidity sensor - reads relative humidity
 
 ### ⚠️ PARTIALLY WORKING
-- [ ] Tariff-based cost calculation (structure ready, rates may vary)
-- [ ] Analytics graphs (basic charts working, more data needed)
+- [ ] Device control states (UI ready, Arduino doesn't listen to `devices/` path)
+- [ ] Tariff-based cost calculation (no power data yet)
+- [ ] Analytics graphs (water data only, need electrical data)
+- [ ] Full Dashboard integration (UI expects voltage/current/power)
 
 ### ❌ NOT YET INTEGRATED
-Priority sensors needed for full dashboard:
+Priority sensors NOT in current firmware:
 
-1. **Temperature & Humidity Sensor** (DHT22 or SHT3x)
-   - Arduino pin: GPIO21 (I2C or digital)
-   - Firebase fields: `temperature`, `humidity`
-   - Priority: **HIGH** (occupancy & comfort)
+1. **PZEM-004T Meter** (voltage/current/power/energy) ⚡ **HIGH PRIORITY**
+   - Arduino pins: GPIO16 (RX2), GPIO17 (TX2) - ModBus serial
+   - Firebase fields: `voltage`, `current`, `power`, `energy`
+   - Why needed: Cost calculation, power consumption tracking
+   - Estimated effort: Medium (requires ModBus library)
 
-2. **PZEM-004T Meter** (voltage/current/power/energy)
-  - Arduino pins: GPIO16 (RX2), GPIO17 (TX2)
-  - Firebase fields: `voltage`, `current`, `power`, `energy`
-  - Priority: **HIGH** (cost calculation)
-
-3. **Motion Sensor (PIR)** (HC-SR501)
-   - Arduino pin: GPIO12 (digital)
-   - Firebase fields: `pir`, influences `occupancyState`
-   - Priority: **MEDIUM** (occupancy detection)
-
-4. **Door/Window Sensor** (Magnetic reed switch)
-   - Arduino pin: GPIO13 (digital)
-   - Firebase fields: `doorOpen`
-   - Priority: **MEDIUM** (comfort alerts)
-
-5. **Gas Meter Integration** (Pulse counter or analog)
-   - Arduino pin: GPIO36 (digital) or A3 (analog)
-   - Firebase fields: `gas`
-   - Priority: **MEDIUM**
-
-6. **Light Sensor (LDR)** (photoresistor + divider)
-   - Arduino pin: GPIO35 (ADC) or A1
+2. **Light Sensor (LDR)** (photoresistor + divider) 💡 **LOW PRIORITY**
+   - Arduino pin: GPIO36 (ADC) - alternative analog pin
    - Firebase fields: `lightLevel`
-   - Priority: **LOW** (automation enhancement)
+   - Why needed: Ambient light automation, comfort metrics
+   - Estimated effort: Low (analog read)
 
-7. **Water/flow calibration review** (optional)
-  - Arduino pins: GPIO34 (water level), GPIO35 (flow sensor)
-  - Firebase fields: `waterLevel`, `flowRate`
-  - Priority: **LOW** (tuning only)
+### 📝 IMPLEMENTATION NOTES
+- **Current Firmware File:** `firmware/Merge_Sensors/Occ_Buz_Gas_Flow_Level.ino`
+- **Data Upload Interval:** 3 seconds (FIREBASE_INTERVAL)
+- **Occupancy Events Interval:** 5 seconds (OCCUPANCY_UPLOAD_INTERVAL)
+- **Missing Fields Handling:** UI uses default values (0/false) for missing fields from Arduino
+- **Field Mismatch:** UI expects 14+ fields, Arduino sends 10 fields (waterLevel, flowRate, totalLiters, gas, doorState, motionDetected, humanPresent, relayActive, temperature, humidity)
 
 ### 📋 FEATURE COMPLETION CHART
 
 ```
-Sensor Data Collection:        [████░░░░░░░░░░░░░░░░░░░░░░] 15%
-Device Control:                [███████████████████░░░░░░░░] 90%
-Historical Data Logging:       [██████████░░░░░░░░░░░░░░░░░░] 35%
-Cost Tracking & Analytics:     [█████░░░░░░░░░░░░░░░░░░░░░░░] 15%
-Alerts & Notifications:        [██████████░░░░░░░░░░░░░░░░░░] 30%
-Dashboard UI & Visualization:  [█████████████████░░░░░░░░░░░] 50%
+Sensor Data Collection:        [██████████░░░░░░░░░░░░░░░░░░] 40%  (water, gas, temp/humidity, occupancy working)
+Device Control:                [███████████████░░░░░░░░░░░░░] 60%  (hardware OK, UI/Arduino sync needed)
+Historical Data Logging:       [██████████░░░░░░░░░░░░░░░░░░] 35%  (water only)
+Cost Tracking & Analytics:     [░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%   (waiting for power data)
+Alerts & Notifications:        [████████░░░░░░░░░░░░░░░░░░░░] 25%  (gas/motion/temp alerts, needs expansion)
+Dashboard UI & Visualization:  [██████░░░░░░░░░░░░░░░░░░░░░░] 20%  (water/temp/humidity cards, others stub data)
 ```
 
 ---
@@ -599,8 +599,9 @@ void loop() {
 ## 📞 Summary Checklist
 
 **What Arduino sends to Firebase every 3 seconds:**
-- ✅ 14 sensor readings (water level, flow, temp, humidity, voltage, current, power, gas, PIR, door, light, energy)
-- ✅ 6 device control states (lights, pump, fan, relay, motion, buzzer)
+- ✅ 10 sensor readings currently (water level, flow, totalLiters, gas, doorState, motionDetected, humanPresent, relayActive, temperature, humidity)
+- ⏳ Still needed: voltage, current, power, energy, lightLevel (5 more fields)
+- ⚠️ Device control states (UI ready, Arduino doesn't listen yet)
 - ✅ Timestamp of update
 
 **What Web Dashboard receives & displays:**
