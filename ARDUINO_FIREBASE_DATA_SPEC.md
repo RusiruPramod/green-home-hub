@@ -442,8 +442,11 @@ Dashboard UI & Visualization:  [████████████████
 //For Water Flow  Readings
 #define FLOW_SENSOR_PIN 35
 
-// Optional sensors not included in the current hardware map:
- #define DHT_PIN 4
+// DHT11 Sensor (Temperature & Humidity)
+#define DHT11_PIN 4
+
+// Second Relay (extra control - light/fan/lock system)
+#define RELAY_2_PIN 14
 
 
 // Sensors
