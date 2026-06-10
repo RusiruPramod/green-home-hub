@@ -123,10 +123,6 @@ bool lastHumanDetected = false;
 unsigned long lastHumanTime = 0;
 bool relay2State = false;
 
-// Firebase tracking for occupancy
-unsigned long lastOccupancyUpload = 0;
-const unsigned long OCCUPANCY_UPLOAD_INTERVAL = 5000;  // Log occupancy changes every 5 seconds
-
 // ======================
 // TIMERS
 // ======================
@@ -146,22 +142,6 @@ void IRAM_ATTR pulseCounter() {
 
 // ======================
 // HELPER FUNCTIONS
-// ======================
-// ======================
-// TOKEN STATUS CALLBACK
-// ======================
-void tokenStatusCallback(status_info_t info) {
-  if (info.status == token_status_ready) {
-    Serial.println("\n✓ Firebase Auth Token Ready!");
-  } else if (info.status == token_status_expired) {
-    Serial.println("\n✗ Firebase Auth Token Expired!");
-  } else if (info.status == token_status_error) {
-    Serial.println("\n✗ Firebase Auth Token Error!");
-  }
-}
-
-// ======================
-// BEEP HELPER
 // ======================
 void beep(int delayTime) {
   digitalWrite(BUZZER_PIN, HIGH);
@@ -261,25 +241,19 @@ void updateGasReading() {
       delay(200);
       digitalWrite(BUZZER_PIN, LOW);
       delay(200);
-  // Only process if state changed OR if it's the first read (lastDoorState == -1)
-  if (doorState != lastDoorState) {
-    if (lastDoorState != -1) {  // Skip alert on first read
-      Serial.print("DOOR STATE CHANGED: ");
-      Serial.println(doorState ? "CLOSED" : "OPEN");
-      
-      if (doorState == 0 && !doorAlertDone) {
-        Serial.println("⚠️ DOOR OPEN ALERT");
-        beep(300);
-        doorAlertDone = true;
-      }
-      
-      if (doorState == 1) {
-        Serial.println("DOOR CLOSED");
-        doorAlertDone = false;
-      }
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(200);
+      digitalWrite(BUZZER_PIN, LOW);
     } else {
-      Serial.print("INITIAL DOOR STATE: ");
-      Serial.println(doorState ? "CLOSED" : "OPEN")
+      digitalWrite(BUZZER_PIN, LOW);
+      digitalWrite(RELAY_PIN, LOW);
+    }
+  }
+}
+
+// ======================
+// DOOR SENSOR
+// ======================
 void updateDoorReading() {
   int doorState = digitalRead(DOOR_SWITCH_PIN);
   
@@ -303,16 +277,9 @@ void updateDoorReading() {
 }
 
 // ======================
-// PIR SlastPIRState != -1) {  // Skip on first read
-      if (pirState == 1) {
-        Serial.println("🔴 MOTION DETECTED");
-        beep(120);
-      } else {
-        Serial.println("👁️ NO MOTION");
-      }
-    } else {
-      Serial.print("INITIAL PIR STATE: ");
-      Serial.println(pirState ? "MOTION" : "NO MOTION"Reading() {
+// PIR SENSOR
+// ======================
+void updatePIRReading() {
   int pirState = digitalRead(PIR_PIN);
   
   if (pirState != lastPIRState) {
@@ -350,25 +317,15 @@ void updateHumanDetection() {
     if (!relay2State) {
       relay2State = true;
       digitalWrite(RELAY_2_PIN, HIGH);
-   UPLOAD OCCUPANCY EVENTS
-// ======================
-void uploadOccupancyEvent(const char* eventType, int eventValue) {
-  if (Firebase.ready() && signupOK) {
-    FirebaseJson occupancyEvent;
-    occupancyEvent.set("roomId", roomId);
-    occupancyEvent.set("eventType", eventType);
-    occupancyEvent.set("eventValue", eventValue);
-    occupancyEvent.set("timestamp/.sv", "timestamp");
-    
-    String occupancyPath = "properties/" + propertyId + "/occupancy/events";
-    
-    bool success = Firebase.RTDB.pushJSON(&fbdo, occupancyPath, &occupancyEvent);
-    
-    if (success) {
-      Serial.printf("✓ Occupancy event uploaded: %s = %d\n", eventType, eventValue);
-    } else {
-      Serial.printf("✗ Failed to upload occupancy event: %s\n", fbdo.errorReason().c_str());
+      Serial.println(" RELAY 2 ON (Human presence)");
     }
+  }
+  
+  // Turn off relay after 5 seconds of no detection
+  if (relay2State && (millis() - lastHumanTime > 5000)) {
+    relay2State = false;
+    digitalWrite(RELAY_2_PIN, LOW);
+    Serial.println(" RELAY 2 OFF (No presence)");
   }
 }
 
@@ -387,26 +344,41 @@ void uploadLatestTelemetry() {
       payload.set("waterLevel", waterPercent);
       payload.set("gas", gasPpm);
       payload.set("doorState", lastDoorState);
-      payload.set("motionDetected", lastPIRState == 1 ? true : false);
+      payload.set("motionDetected", lastPIRState);
       payload.set("humanPresent", lastHumanDetected);
-      payload.set("relayActive", relay2State);
       payload.set("updatedAt/.sv", "timestamp");
       
-      bool updateSuccess = Firebase.RTDB.updateNode(&fbdo, basePath + "/latest", &payload);
+      Firebase.RTDB.updateNode(&fbdo, basePath + "/latest", &payload);
       
-      if (updateSuccess) {
-        firebaseBlinkPulse();
-        Serial.println("✓ Telemetry updated to Firebase");
-      } else {
-        Serial.printf("✗ Telemetry update failed: %s\n", fbdo.errorReason().c_str());
-      }
+      firebaseBlinkPulse();
       
-      // Upload flow history if there's flow
       if (flowRate > 0.0) {
         FirebaseJson history;
         history.set("roomId", roomId);
         history.set("flowRate", flowRate);
-  Serial.println("\n\n=== SMART HOTEL SYSTEM INITIALIZING ===\n");
+        history.set("deltaLiters", pendingHistoryDeltaLiters);
+        history.set("totalLiters", totalLiters);
+        history.set("createdAt/.sv", "timestamp");
+        
+        bool ok = Firebase.RTDB.pushJSON(
+          &fbdo,
+          "properties/" + propertyId + "/history",
+          &history);
+        
+        if (ok) {
+          pendingHistoryDeltaLiters = 0.0;
+        }
+      }
+    }
+  }
+}
+
+// ======================
+// SETUP
+// ======================
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
   
   basePath = "properties/" + propertyId + "/rooms/" + roomId;
   
@@ -425,14 +397,13 @@ void uploadLatestTelemetry() {
   
   // Gas sensor and actuators
   pinMode(GAS_SENSOR_PIN, INPUT);
-  analogSetPinAttenuation(GAS_SENSOR_PIN, ADC_11db);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
   digitalWrite(RELAY_PIN, LOW);
   
   // Door sensor
-  pinMode(DOOR_SWITCH_PIN, INPUT_PULLUP);
+  pinMode(DOOR_SWITCH_PIN, INPUT);
   
   // PIR sensor
   pinMode(PIR_PIN, INPUT);
@@ -440,71 +411,6 @@ void uploadLatestTelemetry() {
   // Ultrasonic sensor
   pinMode(ULTRASONIC_TRIG_PIN, OUTPUT);
   pinMode(ULTRASONIC_ECHO_PIN, INPUT);
-  
-  // Second relay
-  pinMode(RELAY_2_PIN, OUTPUT);
-  digitalWrite(RELAY_2_PIN, LOW);
-  
-  // ======================
-  // INITIALIZE SENSOR STATES
-  // ======================
-  delay(500);  // Allow sensors to stabilize
-  
-  // Read initial states
-  lastDoorState = digitalRead(DOOR_SWITCH_PIN);
-  lastPIRState = digitalRead(PIR_PIN);
-  
-  Serial.printf("Initial door state: %d (0=OPEN, 1=CLOSED)\n", lastDoorState);
-  Serial.printf("Initial PIR state: %d (0=NO MOTION, 1=MOTION)\n", lastPIRState);
-  
-  // ======================
-  // WiFi CONNECTION
-  // ======================
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("\nConnecting WiFi");
-  
-  unsigned long wifiStart = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - wifiStart < 20000) {
-    wifiConnectingBlink();
-    Serial.print(".");
-  }
-  
-  wifiConnected = (WiFi.status() == WL_CONNECTED);
-  Serial.println(wifiConnected ? "\n✓ WiFi Connected" : "\n✗ WiFi Failed");
-  
-  if (wifiConnected) {
-    Serial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
-  }
-  
-  // ======================
-  // FIREBASE SETUP
-  // ======================
-  config.api_key = API_KEY;
-  config.database_url = DATABASE_URL;
-  
-  if (Firebase.signUp(&config, &auth, "", "")) {
-    signupOK = true;
-    Serial.println("✓ Firebase Signup OK");
-  } else {
-    Serial.printf("✗ Firebase Signup Failed: %s\n", config.signer.signupError.message.c_str());
-  }
-  
-  config.token_status
-  uploadLatestTelemetry();
-  
-  // Track occupancy changes and send to separate collection
-  if (millis() - lastOccupancyUpload >= OCCUPANCY_UPLOAD_INTERVAL) {
-    if (lastDoorState != -1) {  // Only after initial read
-      uploadOccupancyEvent("door", lastDoorState);
-    }
-    if (lastPIRState != -1) {   // Only after initial read
-      uploadOccupancyEvent("motion", lastPIRState);
-    }
-    lastOccupancyUpload = millis();
-  }&auth);
-  Firebase.reconnectWiFi(true);
-  
-  Serial.println("\n=== Smart Hotel System Ready! ===\n
   
   // Second relay
   pinMode(RELAY_2_PIN, OUTPUT);
