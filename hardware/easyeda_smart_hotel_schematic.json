@@ -1,0 +1,133 @@
+{
+  "head": {
+    "docType": "1",
+    "editorVersion": "6.5.46",
+    "newgId": true,
+    "c_para": {
+      "Prefix Start": "1",
+      "name": "IoT Smart Hotel Management System - ESP32 Carrier",
+      "Contributor": "Green Home Hub"
+    },
+    "c_spiceCmd": null,
+    "hasIdFlag": true,
+    "x": 0,
+    "y": 0,
+    "uuid": "shm-esp32-carrier-0002",
+    "utime": 1750636800,
+    "importFlag": 0,
+    "transformList": ""
+  },
+  "canvas": "CA~1400~1000~#FFFFFF~yes~#CCCCCC~10~1400~1000~line~1~pixel~5~0~0.5~none~12~1000",
+  "shape": [
+    "T~L~430~36~0~#000080~~14pt~bold~~~IoT SMART HOTEL MANAGEMENT SYSTEM  -  ESP32 CARRIER~comment~1~gge_title~start",
+    "T~L~430~56~0~#444444~~8pt~~~~Open with: File -> Open -> EasyEDA  (NOT Import). Placement sheet + net map. Drop library parts, then wire per the NET LABELS below.~comment~1~gge_sub~start",
+
+    "R~600~120~0~0~200~360~#0000A0~2~0~none~gge_u1~0~",
+    "T~L~610~140~0~#0000A0~~11pt~bold~~~U1  ESP32 DevKit V1~comment~1~gge_u1t~start",
+    "T~L~610~158~0~#0000A0~~8pt~~~~(30-pin module)~comment~1~gge_u1s~start",
+    "T~L~610~182~0~#222222~~8pt~~~~VIN  ........ +5V~comment~1~gge_u1_vin~start",
+    "T~L~610~198~0~#222222~~8pt~~~~3V3  ........ +3V3~comment~1~gge_u1_3v3~start",
+    "T~L~610~214~0~#222222~~8pt~~~~GND  ........ GND~comment~1~gge_u1_gnd~start",
+    "T~L~610~234~0~#222222~~8pt~~~~GPIO4  ...... NET_DHT~comment~1~gge_u1_4~start",
+    "T~L~610~250~0~#222222~~8pt~~~~GPIO35 ...... NET_FLOW~comment~1~gge_u1_35~start",
+    "T~L~610~266~0~#222222~~8pt~~~~GPIO34 ...... NET_WATER~comment~1~gge_u1_34~start",
+    "T~L~610~282~0~#222222~~8pt~~~~GPIO32 ...... NET_GAS~comment~1~gge_u1_32~start",
+    "T~L~610~298~0~#222222~~8pt~~~~GPIO33 ...... NET_DOOR~comment~1~gge_u1_33~start",
+    "T~L~610~314~0~#222222~~8pt~~~~GPIO27 ...... NET_PIR~comment~1~gge_u1_27~start",
+    "T~L~610~330~0~#222222~~8pt~~~~GPIO18 ...... NET_TRIG~comment~1~gge_u1_18~start",
+    "T~L~610~346~0~#222222~~8pt~~~~GPIO19 ...... NET_ECHO_DIV~comment~1~gge_u1_19~start",
+    "T~L~610~362~0~#222222~~8pt~~~~GPIO26 ...... NET_RLY1~comment~1~gge_u1_26~start",
+    "T~L~610~378~0~#222222~~8pt~~~~GPIO14 ...... NET_RLY2~comment~1~gge_u1_14~start",
+    "T~L~610~394~0~#222222~~8pt~~~~GPIO25 ...... NET_BUZ_DRV~comment~1~gge_u1_25~start",
+    "T~L~610~410~0~#222222~~8pt~~~~GPIO23 ...... NET_LED~comment~1~gge_u1_23~start",
+    "T~L~610~426~0~#222222~~8pt~~~~GPIO16 ...... NET_PZEM_RX~comment~1~gge_u1_16~start",
+    "T~L~610~442~0~#222222~~8pt~~~~GPIO17 ...... NET_PZEM_DIV~comment~1~gge_u1_17~start",
+    "T~L~610~458~0~#222222~~8pt~~~~GPIO2  ...... TP1 (internal LED)~comment~1~gge_u1_2~start",
+
+    "R~120~120~0~0~190~70~#008000~1~0~none~gge_j1~0~",
+    "T~L~128~136~0~#008000~~9pt~bold~~~J1 5V-IN (screw 2P)~comment~1~gge_j1t~start",
+    "T~L~128~154~0~#222222~~8pt~~~~1:+ ->D1-> +5V   2:- -> GND~comment~1~gge_j1n~start",
+    "T~L~128~170~0~#C00000~~8pt~~~~D1 SS34 rev-pol; C1 100uF; C2/C3 100nF @ U1~comment~1~gge_j1p~start",
+
+    "R~120~210~0~0~190~64~#7A0000~1~0~none~gge_j2~0~",
+    "T~L~128~226~0~#7A0000~~9pt~bold~~~J2 DHT11 (1x3)~comment~1~gge_j2t~start",
+    "T~L~128~244~0~#222222~~8pt~~~~+5V / NET_DHT / GND~comment~1~gge_j2n~start",
+
+    "R~120~294~0~0~190~64~#7A0000~1~0~none~gge_j3~0~",
+    "T~L~128~310~0~#7A0000~~9pt~bold~~~J3 FLOW (1x3)~comment~1~gge_j3t~start",
+    "T~L~128~328~0~#222222~~8pt~~~~+5V / NET_FLOW / GND~comment~1~gge_j3n~start",
+
+    "R~120~378~0~0~190~64~#7A0000~1~0~none~gge_j4~0~",
+    "T~L~128~394~0~#7A0000~~9pt~bold~~~J4 WATER LEVEL (1x3)~comment~1~gge_j4t~start",
+    "T~L~128~412~0~#222222~~8pt~~~~+5V / NET_WATER / GND~comment~1~gge_j4n~start",
+
+    "R~120~462~0~0~190~64~#7A0000~1~0~none~gge_j5~0~",
+    "T~L~128~478~0~#7A0000~~9pt~bold~~~J5 GAS MQ (1x3)~comment~1~gge_j5t~start",
+    "T~L~128~496~0~#222222~~8pt~~~~+5V / AO=NET_GAS / GND~comment~1~gge_j5n~start",
+
+    "R~120~546~0~0~190~80~#7A0000~1~0~none~gge_j6~0~",
+    "T~L~128~562~0~#7A0000~~9pt~bold~~~J6 DOOR (1x2)~comment~1~gge_j6t~start",
+    "T~L~128~580~0~#222222~~8pt~~~~SIG=NET_DOOR / GND~comment~1~gge_j6n~start",
+    "T~L~128~598~0~#C00000~~8pt~~~~R6 10k: NET_DOOR -> +3V3 (pull-up)~comment~1~gge_j6r~start",
+
+    "R~340~546~0~0~200~64~#7A0000~1~0~none~gge_j7~0~",
+    "T~L~348~562~0~#7A0000~~9pt~bold~~~J7 PIR (1x3)~comment~1~gge_j7t~start",
+    "T~L~348~580~0~#222222~~8pt~~~~+5V / OUT=NET_PIR / GND~comment~1~gge_j7n~start",
+
+    "R~340~630~0~0~200~84~#7A0000~1~0~none~gge_j8~0~",
+    "T~L~348~646~0~#7A0000~~9pt~bold~~~J8 HC-SR04 (1x4)~comment~1~gge_j8t~start",
+    "T~L~348~664~0~#222222~~8pt~~~~+5V / TRIG=NET_TRIG / ECHO / GND~comment~1~gge_j8n~start",
+    "T~L~348~682~0~#C00000~~8pt~~~~ECHO ->R7(1k)-> NET_ECHO_DIV ->R8(2k)-> GND~comment~1~gge_j8d~start",
+
+    "R~600~546~0~0~220~84~#7A0000~1~0~none~gge_j14~0~",
+    "T~L~608~562~0~#7A0000~~9pt~bold~~~J14 PZEM-004T (1x4)~comment~1~gge_j14t~start",
+    "T~L~608~580~0~#222222~~8pt~~~~+5V / GND / RX=NET_PZEM_RX / TX~comment~1~gge_j14n~start",
+    "T~L~608~598~0~#C00000~~8pt~~~~TX ->R9(1k)-> NET_PZEM_DIV ->R10(2k)-> GND~comment~1~gge_j14d~start",
+
+    "R~900~120~0~0~220~64~#00557A~1~0~none~gge_j9~0~",
+    "T~L~908~136~0~#00557A~~9pt~bold~~~J9 RELAY1 driver (1x3)~comment~1~gge_j9t~start",
+    "T~L~908~154~0~#222222~~8pt~~~~IN=NET_RLY1 / +5V / GND~comment~1~gge_j9n~start",
+
+    "R~900~204~0~0~220~64~#00557A~1~0~none~gge_j10~0~",
+    "T~L~908~220~0~#00557A~~9pt~bold~~~J10 RELAY2 driver (1x3)~comment~1~gge_j10t~start",
+    "T~L~908~238~0~#222222~~8pt~~~~IN=NET_RLY2 / +5V / GND~comment~1~gge_j10n~start",
+
+    "R~900~288~0~0~220~64~#008000~1~0~none~gge_j11~0~",
+    "T~L~908~304~0~#008000~~9pt~bold~~~J11 RLY1-OUT (screw 3P)~comment~1~gge_j11t~start",
+    "T~L~908~322~0~#222222~~8pt~~~~COM / NO / NC  (AC load)~comment~1~gge_j11n~start",
+
+    "R~900~372~0~0~220~64~#008000~1~0~none~gge_j12~0~",
+    "T~L~908~388~0~#008000~~9pt~bold~~~J12 RLY2-OUT (screw 3P)~comment~1~gge_j12t~start",
+    "T~L~908~406~0~#222222~~8pt~~~~COM / NO / NC  (AC load)~comment~1~gge_j12n~start",
+
+    "R~900~456~0~0~220~84~#7A0000~1~0~none~gge_j13~0~",
+    "T~L~908~472~0~#7A0000~~9pt~bold~~~J13 BUZZER (1x2)~comment~1~gge_j13t~start",
+    "T~L~908~490~0~#222222~~8pt~~~~+5V / BUZ-~comment~1~gge_j13n~start",
+    "T~L~908~508~0~#C00000~~8pt~~~~NET_BUZ_DRV ->R5(1k)-> Q1.B ; Q1.C=BUZ- ; Q1.E=GND~comment~1~gge_j13d~start",
+
+    "R~1180~120~0~0~180~84~#7A0000~1~0~none~gge_led~0~",
+    "T~L~1188~136~0~#7A0000~~9pt~bold~~~LED1 EXT STATUS~comment~1~gge_ledt~start",
+    "T~L~1188~154~0~#222222~~8pt~~~~NET_LED ->R1(220)-> LED1.A~comment~1~gge_ledn~start",
+    "T~L~1188~172~0~#222222~~8pt~~~~LED1.K -> GND~comment~1~gge_ledk~start",
+
+    "R~40~720~0~0~1320~230~#0000A0~1~1~none~gge_netbox~0~",
+    "T~L~52~742~0~#0000A0~~11pt~bold~~~NET LABELS  (place an identical-named Net Label on each pin; same name = connected)~comment~1~gge_nb_t~start",
+    "T~L~52~766~0~#000000~~8pt~bold~~~POWER~comment~1~gge_nb_pwr~start",
+    "T~L~52~784~0~#000000~~8pt~~~~+5V   = J1.1(via D1), U1.VIN, C1+, C3, J2.1, J3.1, J4.1, J5.1, J7.1, J8.1, J9.+5V, J10.+5V, J13.1, J14.+5V~comment~1~gge_nb_5v~start",
+    "T~L~52~800~0~#000000~~8pt~~~~+3V3  = U1.3V3, C2, R6(top)~comment~1~gge_nb_3v3~start",
+    "T~L~52~816~0~#000000~~8pt~~~~GND   = J1.2, C1-, C2, C3, U1.GND, R8(bot), R10(bot), Q1.E, LED1.K, J*.GND (all), J11/J12 as needed, H1-H4~comment~1~gge_nb_gnd~start",
+    "T~L~52~838~0~#000000~~8pt~bold~~~SIGNALS (ESP32 pin -> net -> connector)~comment~1~gge_nb_sig~start",
+    "T~L~52~856~0~#000000~~8pt~~~~NET_DHT=GPIO4->J2.2   NET_FLOW=GPIO35->J3.2   NET_WATER=GPIO34->J4.2   NET_GAS=GPIO32->J5.2   NET_DOOR=GPIO33->J6.1~comment~1~gge_nb_s1~start",
+    "T~L~52~872~0~#000000~~8pt~~~~NET_PIR=GPIO27->J7.2   NET_TRIG=GPIO18->J8.2   NET_RLY1=GPIO26->J9.1   NET_RLY2=GPIO14->J10.1   NET_LED=GPIO23->R1~comment~1~gge_nb_s2~start",
+    "T~L~52~888~0~#000000~~8pt~~~~NET_PZEM_RX=GPIO16->J14.3   NET_BUZ_DRV=GPIO25->R5~comment~1~gge_nb_s3~start",
+    "T~L~52~908~0~#C00000~~8pt~bold~~~LEVEL-SHIFTED (do NOT wire 5V straight to GPIO)~comment~1~gge_nb_ls~start",
+    "T~L~52~926~0~#C00000~~8pt~~~~NET_ECHO_DIV: J8.3(ECHO,5V) -R7(1k)- GPIO19 -R8(2k)- GND     NET_PZEM_DIV: J14.4(TX,5V) -R9(1k)- GPIO17 -R10(2k)- GND~comment~1~gge_nb_ls2~start"
+  ],
+  "BBox": {
+    "x": 0,
+    "y": 0,
+    "width": 1400,
+    "height": 1000
+  },
+  "colors": {}
+}
