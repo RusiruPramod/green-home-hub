@@ -148,23 +148,43 @@ J7  PIR   (5V/OUT/GND)   J14 PZEM (5V/GND/RX/TX)
 
 ---
 
-## 6. EasyEDA workflow: import → layout → route → DRC
+## 6. EasyEDA Standard workflow: build → route → DRC (the reliable path)
 
-1. **Import schematic scaffold:** EasyEDA → *File → Open → EasyEDA* → select
-   [`easyeda_smart_hotel_schematic.json`](./easyeda_smart_hotel_schematic.json).
-   It opens a labeled sheet with U1 and all connectors placed.
-2. **Drop real library symbols:** replace each labeled placeholder with the matching
-   EasyEDA library part (search "ESP32 DevKit V1", "screw terminal 5.08", "header 1x3",
-   "SS34", "S8050", "HC-SR04"), then wire per the **§3 netlist** (or use net labels — the
-   scaffold already places +5V/GND/GPIO net-label text next to each pad).
-3. **Assign footprints** for every part (Design Manager flags any missing).
-4. **Convert to PCB:** *Design → Convert Schematic to PCB*.
-5. **Board outline:** set to **100 × 100 mm**; add 4× M3 holes per §5.
-6. **Place** components per §5; **route** (manual or *Route → Auto Router*).
-7. **Copper pour** GND on bottom (and top, if desired): *Place → Copper Area → GND*.
-8. **DRC:** *Design → Design Rule Check*; set clearance/width rules from §5 and fix
-   violations until clean.
-9. **Output:** *Fabrication → Gerber* / BOM / pick-and-place.
+This is the method that always works in Standard — symbols come from EasyEDA's own libraries, so
+nothing can "fail to import," and connectivity is done with **net labels** (no manual wire routing
+needed: any two pins carrying the same net-label name are electrically connected).
+
+1. **New schematic:** *File → New → Schematic*. (Optionally open
+   [`easyeda_smart_hotel_schematic.json`](./easyeda_smart_hotel_schematic.json) via *File → Open →
+   EasyEDA* in a second tab as your placement/net-map reference.)
+2. **Place library parts** — press **Shift+F** (Library) and search:
+
+   | Part | Library search term |
+   |------|--------------------|
+   | ESP32 DevKit V1 | `ESP32 DEVKIT V1` or `ESP32-DEVKITC-32` |
+   | 1×3 / 1×4 / 1×2 headers | `HDR-1X3`, `HDR-1X4`, `HDR-1X2` (2.54 mm) |
+   | Power screw terminal 2P | `KF301-2P` / `screw terminal 5.08 2P` |
+   | Relay-out screw terminal 3P | `KF301-3P` |
+   | Schottky D1 | `SS34` |
+   | NPN Q1 | `S8050` or `2N2222` |
+   | Resistors/caps | `R0805`, `C0805`, `CAP 100uF` |
+   | HC-SR04 (optional symbol) | `HC-SR04` |
+
+3. **Connect with net labels** (toolbar **N**, or `Place → Net Label`): drop a label on each pin and
+   type the net name from **§3 / §4**. Identical names auto-connect. Use the dedicated power flags for
+   **+5V**, **+3V3**, **GND** (`Place → Net Flag`). No pin should be left without a label.
+4. **Verify connectivity:** open **Design Manager** (left panel) → expand **Nets**; confirm `+5V`,
+   `GND`, `+3V3` and every `NET_*` lists all the pins from §3. Anything in "unconnected" = a missing label.
+5. **Assign footprints** to every part (Design Manager flags missing ones).
+6. **Convert to PCB:** *Design → Convert Schematic to PCB*.
+7. **Board outline:** set to **100 × 100 mm**; add 4× M3 mounting holes per §5.
+8. **Place** components per §5; **route** (manual, or *Route → Auto Router*).
+9. **Copper pour** GND on the bottom layer: *Place → Copper Area → GND*; add stitching vias.
+10. **DRC:** *Design → Design Rule Check*; set clearance/width rules from §5 and fix until clean.
+11. **Output:** *Fabrication → Gerber* / BOM / pick-and-place.
+
+> Tip: building it this way takes ~10–15 min and is far more robust than chasing a perfect raw JSON,
+> because EasyEDA validates each library symbol and each net for you as you go.
 
 ---
 
