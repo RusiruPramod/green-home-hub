@@ -373,6 +373,25 @@ void uploadOccupancyEvent(const char* eventType, int eventValue) {
 }
 
 // ======================
+// OCCUPANCY STATE CALCULATION
+// ======================
+String calculateOccupancyState() {
+  // Determine room occupancy based on sensor readings
+  // Priority: Human presence > Motion > Door state
+  
+  if (lastHumanDetected || (lastPIRState == 1)) {
+    // Human is actively present or motion detected
+    return "OCCUPIED_ACTIVE";
+  } else if (lastDoorState == 0) {
+    // Door is open but no human detected
+    return "OCCUPIED_IDLE";
+  } else {
+    // No activity, door closed
+    return "VACANT";
+  }
+}
+
+// ======================
 // FIREBASE UPLOAD
 // ======================
 void uploadLatestTelemetry() {
@@ -390,6 +409,7 @@ void uploadLatestTelemetry() {
       payload.set("motionDetected", lastPIRState == 1 ? true : false);
       payload.set("humanPresent", lastHumanDetected);
       payload.set("relayActive", relay2State);
+      payload.set("occupancyState", calculateOccupancyState());
       payload.set("updatedAt/.sv", "timestamp");
       
       bool updateSuccess = Firebase.RTDB.updateNode(&fbdo, basePath + "/latest", &payload);

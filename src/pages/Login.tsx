@@ -81,7 +81,7 @@ export default function Login() {
               <Cpu className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-center text-2xl font-bold tracking-tight">Green Home Hub</CardTitle>
+          <CardTitle className="text-center text-2xl font-bold tracking-tight">EcoHub</CardTitle>
           <CardDescription className="text-center">
             Sign in to your energy management console
           </CardDescription>

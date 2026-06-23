@@ -11,9 +11,7 @@ import {
   ChevronLeft,
   Server,
   Banknote,
-  TestTube,
   LogOut,
-  Bug,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useFirebaseRealtime } from "@/hooks/useFirebaseRealtime";
@@ -41,9 +39,7 @@ const navItems = [
   { icon: Server,          label: "Room Management",  path: "/rooms" },
   { icon: BarChart3,       label: "Analytics",        path: "/analytics" },
   { icon: Bell,            label: "Alerts",           path: "/alerts" },
-  { icon: TestTube,        label: "Evaluation",       path: "/evaluation" },
   { icon: Banknote,        label: "Tariff Info",      path: "/settings/tariffs" },
-  { icon: Bug,             label: "Firebase Debug",   path: "/debug" },
 ];
 
 export function DashboardSidebar() {
@@ -60,8 +56,8 @@ export function DashboardSidebar() {
             <Cpu className="h-4 w-4 text-primary-foreground" />
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-semibold text-sm">Green Home Hub</span>
-            <span className="text-xs text-muted-foreground">SME Energy Mgmt</span>
+            <span className="font-semibold text-sm">EcoHub</span>
+            <span className="text-xs text-muted-foreground">Smart Building Control</span>
           </div>
         </div>
       </SidebarHeader>

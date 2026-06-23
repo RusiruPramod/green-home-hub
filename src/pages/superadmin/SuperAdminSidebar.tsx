@@ -46,7 +46,7 @@ export function SuperAdminSidebar() {
             <Shield className="h-4 w-4 text-primary-foreground" />
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-semibold text-sm">Green Home Hub</span>
+            <span className="font-semibold text-sm">EcoHub</span>
             <Badge variant="outline" className="text-[10px] w-fit px-1.5 py-0 font-normal">
               Super Admin
             </Badge>
