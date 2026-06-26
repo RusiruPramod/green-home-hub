@@ -20,11 +20,14 @@
 ## Relay Pins
 - GPIO26 — Relay 1 — Exhaust Fan (gas)
   - Auto: turns ON when gas detected, then auto OFF.
-  - Manual: user can ON/OFF exhaust fan from app (reusable).
+  - Manual: user can ON/OFF exhaust fan Relay using Device control toggle switch from app (reusable).
 - GPIO14 — Relay 2 — (presence relay)
+  - Auto: turns ON when presence Ocuupnacy detected, then auto OFF.
 - GPIO13 — Relay 3 — Lights
+  - Manual: user can ON/OFF Lights Relay using Device control toggle switch from app (reusable).
 - GPIO5  — Relay 4 — Pump
-- GPIO21 — Relay 5 — Fan
+  - Manual: user can ON/OFF Pump Relay using Device control toggle switch from app (reusable).
+
 
 ## Free Pins
 - GPIO12 — OK (keep LOW at boot)
