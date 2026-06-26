@@ -3,19 +3,37 @@
 **Board:** ESP32 DevKit V1 (30-pin)
 
 ## Used Pins
+
+- `send`  = ESP32 publishes data → `properties/property_001/rooms/room_001/latest/<field>`
+- `recv`  = ESP32 reads command ← Firebase
+- `local` = no Firebase (handled on-device only)
+
 - GPIO2 — Internal LED
+  - recv: `led` (1/0) — app sets via LED toggle
 - GPIO4 — DHT11 (temp/humidity)
+  - send: `latest/temperature`, `latest/humidity` (+ `temperatureStatus`, `humidityStatus`)
 - GPIO16 — PZEM RX (PCB only)
+  - send: `latest/voltage`, `latest/current`, `latest/power`, `latest/energy` (not active in firmware yet)
 - GPIO17 — PZEM TX (PCB only)
+  - send: shares PZEM data above (Serial2 with GPIO16, not active yet)
 - GPIO18 — Ultrasonic TRIG
+  - local: output trigger only (no Firebase)
 - GPIO19 — Ultrasonic ECHO
+  - send: `latest/distance`, `latest/proximityStatus`
 - GPIO23 — External LED
+  - local: WiFi/Firebase status indicator (no Firebase command)
 - GPIO25 — Buzzer
+  - recv: `devices/buzzer` (true/false) — also local auto-beep on gas/alerts
 - GPIO27 — PIR motion
+  - send: `latest/motionDetected`, `latest/humanPresent`
 - GPIO32 — Gas sensor (analog)
+  - send: `latest/gas` (ppm)
 - GPIO33 — Door switch
+  - send: `latest/doorState`
 - GPIO34 — Water level (analog)
+  - send: `latest/waterLevel` (%)
 - GPIO35 — Flow sensor
+  - send: `latest/flowRate`, `latest/totalLiters`
 
 ## Relay Pins
 
