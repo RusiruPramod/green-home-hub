@@ -128,15 +128,15 @@ const unsigned long DHT_INTERVAL = 2000;
 // ======================
 // PZEM DUMMY DATA
 // ======================
-float pzemVoltage = 0.0;
+float pzemVoltage = 230.0f;
 float pzemCurrent = 0.0;
 float pzemPower = 0.0;
 float pzemEnergy = 0.0;
 unsigned long lastPzemRead = 0;
 const unsigned long PZEM_INTERVAL = 3000;
 
-// Simulated user load profile for a small LED-like AC load
-float loadProfileCurrent = 0.0;
+// Realistic small load: 5W to 30W, 230V mains
+float targetPowerW = 15.0f;
 
 // ======================
 // DOOR/PIR STATE VARIABLES
@@ -240,25 +240,27 @@ void updatePzemDummyReading() {
   if (millis() - lastPzemRead >= PZEM_INTERVAL) {
     lastPzemRead = millis();
 
-    float minuteWave = (sin(millis() * 0.00008f) + 1.0f) * 0.5f;
-    float activityWave = (sin(millis() * 0.00031f + 2.2f) + 1.0f) * 0.5f;
+    // Very small voltage ripple (±2V around 230V nominal)
+    float voltageRipple = sin(millis() * 0.0003f) * 2.0f;
+    pzemVoltage = 230.0f + voltageRipple;
 
-    // Realistic mains voltage range for a 230V supply
-    pzemVoltage = 228.5f + (minuteWave * 5.0f);
+    // User activity wave: creates realistic on/off and low/high usage patterns
+    float activityWave = (sin(millis() * 0.00025f + 1.5f) + 1.0f) * 0.5f;
 
-    // LED-style load: mostly low current, with gentle user-usage variation
-    if (activityWave < 0.45f) {
-      loadProfileCurrent = 0.02f + (activityWave * 0.06f);
-    } else if (activityWave < 0.80f) {
-      loadProfileCurrent = 0.05f + ((activityWave - 0.45f) * 0.20f);
+    // Power profile: 5W (idle) to 30W (peak use)
+    if (activityWave < 0.3f) {
+      targetPowerW = 5.0f + (activityWave * 10.0f);       // 5W to 8W: idle/standby
+    } else if (activityWave < 0.6f) {
+      targetPowerW = 8.0f + ((activityWave - 0.3f) * 30.0f); // 8W to 17W: normal use
+    } else if (activityWave < 0.9f) {
+      targetPowerW = 17.0f + ((activityWave - 0.6f) * 20.0f); // 17W to 23W: active use
     } else {
-      loadProfileCurrent = 0.12f + ((activityWave - 0.80f) * 0.35f);
+      targetPowerW = 23.0f + ((activityWave - 0.9f) * 70.0f); // 23W to 30W: peak use
     }
 
-    pzemCurrent = loadProfileCurrent;
-
-    // Small LED/driver loads usually have a decent power factor but not perfect
-    pzemPower = pzemVoltage * pzemCurrent * 0.85f;
+    // Calculate current from power (accounting for 0.9 power factor)
+    pzemCurrent = targetPowerW / (pzemVoltage * 0.9f);
+    pzemPower = targetPowerW;
 
     // kWh accumulation using the elapsed interval in hours
     pzemEnergy += pzemPower * (PZEM_INTERVAL / 3600000.0f);
@@ -594,8 +596,9 @@ void setup() {
   Serial.println("DHT11 Sensor Started");
 
   pzemVoltage = 230.0f;
-  pzemCurrent = 0.75f;
-  pzemPower = pzemVoltage * pzemCurrent * 0.92f;
+  targetPowerW = 15.0f;
+  pzemCurrent = targetPowerW / (pzemVoltage * 0.9f);
+  pzemPower = targetPowerW;
   pzemEnergy = 0.0f;
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
