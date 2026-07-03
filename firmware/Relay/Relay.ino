@@ -2,206 +2,223 @@
 #include <Firebase_ESP_Client.h>
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
-#include <DHT.h>
 
 // ======================
-// WiFi Credentials
+// WiFi
 // ======================
 #define WIFI_SSID "ESP32"
 #define WIFI_PASSWORD "12345678"
 
 // ======================
-// Firebase Credentials
+// Firebase
 // ======================
 #define API_KEY "AIzaSyCO7vsvUvYaLI11r9wjztYuMIteG4AorrY"
 #define DATABASE_URL "https://esp32led-b6105-c0b99-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
 // ======================
-// Relay Pins
+// RELAY CONFIG (IMPORTANT)
+// Most 8-channel optocoupler relay boards = ACTIVE LOW
 // ======================
-constexpr uint8_t RELAY_EXHAUST_FAN = 26; // Relay 1
-constexpr uint8_t RELAY_PRESENCE = 14;    // Relay 2
-constexpr uint8_t RELAY_LIGHTS = 13;      // Relay 3
-constexpr uint8_t RELAY_PUMP = 5;         // Relay 4
-
-// Change to false if your relay module is active LOW.
-constexpr bool RELAY_ACTIVE_HIGH = true;
+#define RELAY_ACTIVE_LOW true
 
 // ======================
-// Firebase Paths
+// GPIO PINS
 // ======================
-const char *PATH_EXHAUST_FAN_CMD = "/devices/exhaustFan";
-const char *PATH_MOTION_ENABLE = "/devices/motionDetection";
-const char *PATH_LIGHTS_CMD = "/devices/lights";
-const char *PATH_PUMP_CMD = "/devices/waterPump";
+#define RELAY_EXHAUST_FAN 26 // Perpul wire = IN 3
+#define RELAY_PRESENCE    14 // Gray = IN 4 
+#define RELAY_LIGHTS      13 // green wire = IN 1 
+#define RELAY_PUMP        5 // Yellow wire = IN 2
 
-// Auto trigger inputs (boolean paths in Firebase)
-const char *PATH_GAS_DETECTED = "/sensors/gasDetected";
-const char *PATH_OCCUPANCY_DETECTED = "/sensors/occupancyDetected";
+// ======================
+// Firebase paths
+// ======================
+#define PROPERTY_ID "property_001"
+#define ROOM_ID     "room_001"
+#define ROOM_PATH   "properties/" PROPERTY_ID "/rooms/" ROOM_ID
 
+#define PATH_EXHAUST ROOM_PATH "/devices/exhaustFan"
+#define PATH_MOTION  ROOM_PATH "/devices/motionDetection"
+#define PATH_LIGHTS  ROOM_PATH "/devices/lights"
+#define PATH_PUMP    ROOM_PATH "/devices/waterPump"
+
+#define PATH_GAS          ROOM_PATH "/latest/gas"
+#define PATH_HUMAN        ROOM_PATH "/latest/humanPresent"
+#define PATH_MOTION_LATEST ROOM_PATH "/latest/motionDetected"
+#define PATH_PIR          ROOM_PATH "/latest/pir"
+
+const float GAS_DETECTED_THRESHOLD = 500.0;
+
+// ======================
+// Firebase objects
+// ======================
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
 bool signupOK = false;
 
-// Device command states from Firebase
-bool cmdExhaustFan = false;
-bool cmdMotionDetectionEnable = true;
+// ======================
+// States
+// ======================
+bool cmdExhaust = false;
+bool cmdMotionEnable = false;
 bool cmdLights = false;
-bool cmdWaterPump = false;
+bool cmdPump = false;
 
-// Auto trigger states from Firebase
 bool gasDetected = false;
-bool occupancyDetected = false;
+bool occDetected = false;
 
-// Runtime relay states
-bool relayExhaustFanOn = false;
-bool relayPresenceOn = false;
-bool relayLightsOn = false;
-bool relayPumpOn = false;
+// runtime states
+bool relayFan = false;
+bool relayPresence = false;
+bool relayLight = false;
+bool relayPump = false;
 
-// Auto-off handling
-unsigned long lastGasDetectedMs = 0;
-unsigned long lastOccupancyDetectedMs = 0;
+// timing
+unsigned long lastGasTime = 0;
 
-constexpr unsigned long FIREBASE_POLL_MS = 500;
-constexpr unsigned long GAS_AUTO_OFF_DELAY_MS = 15000;
-constexpr unsigned long OCCUPANCY_AUTO_OFF_DELAY_MS = 20000;
+const unsigned long GAS_DELAY = 15000;
 
-unsigned long lastPollMs = 0;
+unsigned long lastRead = 0;
+const unsigned long interval = 500;
 
-void setRelay(uint8_t pin, bool on) {
-	digitalWrite(pin, on == RELAY_ACTIVE_HIGH ? HIGH : LOW);
+// ======================
+// RELAY CONTROL
+// ======================
+void writeRelay(int pin, bool state) {
+  if (RELAY_ACTIVE_LOW) {
+    digitalWrite(pin, state ? LOW : HIGH);
+  } else {
+    digitalWrite(pin, state ? HIGH : LOW);
+  }
 }
 
-bool readBoolPath(const char *path, bool fallbackValue) {
-	if (Firebase.RTDB.getBool(&fbdo, path)) {
-		return fbdo.boolData();
-	}
-
-	Serial.print("Read failed: ");
-	Serial.print(path);
-	Serial.print(" | ");
-	Serial.println(fbdo.errorReason());
-	return fallbackValue;
+// ======================
+// READ FIREBASE BOOL
+// ======================
+bool fbReadBool(const char *path, bool fallback) {
+  if (Firebase.RTDB.getBool(&fbdo, path)) {
+    return fbdo.boolData();
+  }
+  return fallback;
 }
 
-void applyRelayOutputs() {
-	setRelay(RELAY_EXHAUST_FAN, relayExhaustFanOn);
-	setRelay(RELAY_PRESENCE, relayPresenceOn);
-	setRelay(RELAY_LIGHTS, relayLightsOn);
-	setRelay(RELAY_PUMP, relayPumpOn);
+float fbReadFloat(const char *path, float fallback) {
+  if (Firebase.RTDB.getFloat(&fbdo, path)) {
+    return fbdo.floatData();
+  }
+  return fallback;
 }
 
-void updateControlLogic() {
-	const unsigned long now = millis();
-
-	if (gasDetected) {
-		lastGasDetectedMs = now;
-	}
-
-	if (occupancyDetected) {
-		lastOccupancyDetectedMs = now;
-	}
-
-	// Relay 1: Exhaust fan
-	// Auto gas control has priority over manual command while gas is high.
-	if (gasDetected) {
-		relayExhaustFanOn = true;
-	} else {
-		const bool gasHoldActive = (now - lastGasDetectedMs) <= GAS_AUTO_OFF_DELAY_MS;
-		relayExhaustFanOn = gasHoldActive ? true : cmdExhaustFan;
-	}
-
-	// Relay 2: Presence relay (auto only)
-	// devices/motionDetection enables/disables occupancy auto behavior.
-	if (!cmdMotionDetectionEnable) {
-		relayPresenceOn = false;
-	} else {
-		const bool occupancyHoldActive = (now - lastOccupancyDetectedMs) <= OCCUPANCY_AUTO_OFF_DELAY_MS;
-		relayPresenceOn = occupancyDetected || occupancyHoldActive;
-	}
-
-	// Relay 3: Lights (manual)
-	relayLightsOn = cmdLights;
-
-	// Relay 4: Pump (manual)
-	relayPumpOn = cmdWaterPump;
-
-	applyRelayOutputs();
+// ======================
+// APPLY RELAYS
+// ======================
+void applyRelays() {
+  writeRelay(RELAY_EXHAUST_FAN, relayFan);
+  writeRelay(RELAY_PRESENCE, relayPresence);
+  writeRelay(RELAY_LIGHTS, relayLight);
+  writeRelay(RELAY_PUMP, relayPump);
 }
 
+// ======================
+// LOGIC ENGINE
+// ======================
+void updateLogic() {
+  unsigned long now = millis();
+
+  if (gasDetected) lastGasTime = now;
+
+  // ===== EXHAUST FAN (gas priority)
+  if (gasDetected) {
+    relayFan = true;
+  } else {
+    if ((now - lastGasTime) <= GAS_DELAY) {
+      relayFan = true;
+    } else {
+      relayFan = cmdExhaust;
+    }
+  }
+
+  // ===== PRESENCE RELAY (dashboard control)
+  relayPresence = cmdMotionEnable;
+
+  // ===== LIGHTS (manual)
+  relayLight = cmdLights;
+
+  // ===== PUMP (manual)
+  relayPump = cmdPump;
+
+  applyRelays();
+}
+
+// ======================
+// SETUP
+// ======================
 void setup() {
-	Serial.begin(115200);
+  Serial.begin(115200);
 
-	pinMode(RELAY_EXHAUST_FAN, OUTPUT);
-	pinMode(RELAY_PRESENCE, OUTPUT);
-	pinMode(RELAY_LIGHTS, OUTPUT);
-	pinMode(RELAY_PUMP, OUTPUT);
+  pinMode(RELAY_EXHAUST_FAN, OUTPUT);
+  pinMode(RELAY_PRESENCE, OUTPUT);
+  pinMode(RELAY_LIGHTS, OUTPUT);
+  pinMode(RELAY_PUMP, OUTPUT);
 
-	// Safe startup defaults
-	relayExhaustFanOn = false;
-	relayPresenceOn = false;
-	relayLightsOn = false;
-	relayPumpOn = false;
-	applyRelayOutputs();
+  applyRelays();
 
-	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-	Serial.print("Connecting to WiFi");
-	while (WiFi.status() != WL_CONNECTED) {
-		Serial.print(".");
-		delay(300);
-	}
-	Serial.println();
-	Serial.print("Connected. IP: ");
-	Serial.println(WiFi.localIP());
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(300);
+    Serial.print(".");
+  }
 
-	config.api_key = API_KEY;
-	config.database_url = DATABASE_URL;
-	config.token_status_callback = tokenStatusCallback;
+  Serial.println("\nWiFi Connected");
 
-	if (Firebase.signUp(&config, &auth, "", "")) {
-		signupOK = true;
-		Serial.println("Firebase signUp OK");
-	} else {
-		Serial.print("Firebase signUp failed: ");
-		Serial.println(config.signer.signupError.message.c_str());
-	}
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_URL;
 
-	Firebase.begin(&config, &auth);
-	Firebase.reconnectWiFi(true);
+  if (Firebase.signUp(&config, &auth, "", "")) {
+    signupOK = true;
+  }
+
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
 }
 
+// ======================
+// LOOP
+// ======================
 void loop() {
-	if (!Firebase.ready() || !signupOK) {
-		return;
-	}
+  if (!Firebase.ready() || !signupOK) return;
 
-	const unsigned long now = millis();
-	if ((now - lastPollMs) < FIREBASE_POLL_MS) {
-		return;
-	}
-	lastPollMs = now;
+  unsigned long now = millis();
+  if (now - lastRead < interval) return;
+  lastRead = now;
 
-	// Read manual commands
-	cmdExhaustFan = readBoolPath(PATH_EXHAUST_FAN_CMD, cmdExhaustFan);
-	cmdMotionDetectionEnable = readBoolPath(PATH_MOTION_ENABLE, cmdMotionDetectionEnable);
-	cmdLights = readBoolPath(PATH_LIGHTS_CMD, cmdLights);
-	cmdWaterPump = readBoolPath(PATH_PUMP_CMD, cmdWaterPump);
+  // ===== READ COMMANDS
+  cmdExhaust = fbReadBool(PATH_EXHAUST, cmdExhaust);
+  cmdMotionEnable = fbReadBool(PATH_MOTION, cmdMotionEnable);
+  cmdLights = fbReadBool(PATH_LIGHTS, cmdLights);
+  cmdPump = fbReadBool(PATH_PUMP, cmdPump);
 
-	// Read auto triggers
-	gasDetected = readBoolPath(PATH_GAS_DETECTED, gasDetected);
-	occupancyDetected = readBoolPath(PATH_OCCUPANCY_DETECTED, occupancyDetected);
+  // ===== READ SENSORS
+  float gasValue = fbReadFloat(PATH_GAS, gasDetected ? GAS_DETECTED_THRESHOLD : 0.0);
+  gasDetected = gasValue >= GAS_DETECTED_THRESHOLD;
 
-	updateControlLogic();
+  occDetected = fbReadBool(
+    PATH_HUMAN,
+    fbReadBool(PATH_MOTION_LATEST, fbReadBool(PATH_PIR, occDetected))
+  );
 
-	Serial.printf("[Relays] Exhaust:%d Presence:%d Lights:%d Pump:%d | gas:%d occ:%d motionAuto:%d\n",
-								relayExhaustFanOn,
-								relayPresenceOn,
-								relayLightsOn,
-								relayPumpOn,
-								gasDetected,
-								occupancyDetected,
-								cmdMotionDetectionEnable);
+  updateLogic();
+
+  Serial.printf(
+    "FAN:%d PRES:%d LIGHT:%d PUMP:%d | GAS:%d(%.1f) OCC:%d MOTION:%d\n",
+    relayFan,
+    relayPresence,
+    relayLight,
+    relayPump,
+    gasDetected,
+    gasValue,
+    occDetected,
+    cmdMotionEnable
+  );
 }
