@@ -44,15 +44,9 @@ const int extLedPin = 23;
 // ======================
 unsigned long lastLEDUpdate = 0;
 unsigned long lastHeartbeat = 0;
-
 const unsigned long LED_POLL_INTERVAL = 1500;
-
 bool lastKnownLedState = false;
-
-// WiFi state tracking
 bool wifiConnected = false;
-
-// Firebase blink control
 bool firebaseBlink = false;
 unsigned long firebaseBlinkTime = 0;
 
@@ -61,13 +55,10 @@ unsigned long firebaseBlinkTime = 0;
 // ======================
 const int flowPin = 35;
 volatile int pulseCount = 0;
-
 float flowRate = 0.0;
 float totalLiters = 0.0;
 float deltaLiters = 0.0;
-
 float calibrationFactor = 320.0;
-
 unsigned long lastFlowCalc = 0;
 float pendingHistoryDeltaLiters = 0.0;
 
@@ -77,7 +68,6 @@ float pendingHistoryDeltaLiters = 0.0;
 #define WATER_SENSOR_PIN 34
 #define DRY_VALUE 1200
 #define WET_VALUE 1800
-
 int waterPercent = 0;
 unsigned long lastWaterRead = 0;
 
@@ -87,9 +77,20 @@ unsigned long lastWaterRead = 0;
 #define GAS_SENSOR_PIN 32
 const int BUZZER_PIN = 25;
 const int RELAY_PIN = 26;
-
 int gasPpm = 0;
 unsigned long lastGasRead = 0;
+
+// ======================
+// PZEM DUMMY DATA
+// ======================
+float pzemVoltage = 216.0f;
+float pzemCurrent = 0.0f;
+float pzemPower = 0.0f;
+float pzemEnergy = 0.0f;
+unsigned long lastPzemRead = 0;
+const unsigned long PZEM_INTERVAL = 3000;
+float targetPowerW = 4.41f;
+float targetVoltageV = 216.0f;
 
 // ======================
 // DOOR SENSOR
@@ -117,26 +118,11 @@ unsigned long lastGasRead = 0;
 // ======================
 #define DHTPIN 4
 #define DHTTYPE DHT11
-
 DHT dht(DHTPIN, DHTTYPE);
-
 float temperature = 0.0;
 float humidity = 0.0;
 unsigned long lastDHTRead = 0;
 const unsigned long DHT_INTERVAL = 2000;
-
-// ======================
-// PZEM DUMMY DATA
-// ======================
-float pzemVoltage = 230.0f;
-float pzemCurrent = 0.0;
-float pzemPower = 0.0;
-float pzemEnergy = 0.0;
-unsigned long lastPzemRead = 0;
-const unsigned long PZEM_INTERVAL = 3000;
-
-// Realistic small load: 5W to 30W, 230V mains
-float targetPowerW = 15.0f;
 
 // ======================
 // DOOR/PIR STATE VARIABLES
@@ -145,8 +131,6 @@ bool doorAlertDone = false;
 int lastDoorState = -1;
 int lastPIRState = -1;
 bool lastHumanDetected = false;
-
-// relay timing control
 unsigned long lastHumanTime = 0;
 bool relay2State = false;
 
@@ -161,7 +145,6 @@ const unsigned long DISTANCE_INTERVAL = 500;
 // TIMERS
 // ======================
 unsigned long lastFirebaseUpload = 0;
-
 const unsigned long FLOW_INTERVAL = 1000;
 const unsigned long WATER_INTERVAL = 1000;
 const unsigned long GAS_INTERVAL = 1000;
@@ -186,14 +169,12 @@ void beep(int delayTime) {
 float getDistance() {
   digitalWrite(ULTRASONIC_TRIG_PIN, LOW);
   delayMicroseconds(2);
-
   digitalWrite(ULTRASONIC_TRIG_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(ULTRASONIC_TRIG_PIN, LOW);
 
   long duration = pulseIn(ULTRASONIC_ECHO_PIN, HIGH, 30000);
   if (duration == 0) return 999;
-
   return duration * 0.0343 / 2;
 }
 
@@ -214,22 +195,6 @@ void updateDHTReading() {
 
     humidity = newHumidity;
     temperature = newTemperature;
-
-    Serial.print("Temperature: ");
-    Serial.print(temperature);
-    Serial.print(" C  Humidity: ");
-    Serial.print(humidity);
-    Serial.println(" %");
-
-    if (temperature > 40) {
-      Serial.println("HIGH TEMPERATURE ALERT");
-      beep(100);
-    }
-
-    if (humidity > 80) {
-      Serial.println("HIGH HUMIDITY ALERT");
-      beep(100);
-    }
   }
 }
 
@@ -240,30 +205,16 @@ void updatePzemDummyReading() {
   if (millis() - lastPzemRead >= PZEM_INTERVAL) {
     lastPzemRead = millis();
 
-    // Stable 230V with tiny ripple only (±0.5V)
-    float voltageRipple = sin(millis() * 0.0002f) * 0.5f;
-    pzemVoltage = 230.0f + voltageRipple;
+    float smoothWave = (sin(millis() * 0.00012f) + 1.0f) * 0.5f;
 
-    // Very small variation wave: only ±1W around 5W baseline
-    float smallVariation = sin(millis() * 0.00015f) * 1.0f;
-    targetPowerW = 5.0f + smallVariation;  // 4W to 6W only
+    targetVoltageV = 216.0f + (smoothWave * 14.0f);
+    targetPowerW = 4.41f + (smoothWave * 0.59f);
 
-    // Calculate current from power (accounting for 0.9 power factor)
-    pzemCurrent = targetPowerW / (pzemVoltage * 0.9f);
+    pzemVoltage = targetVoltageV;
     pzemPower = targetPowerW;
+    pzemCurrent = pzemPower / pzemVoltage;
 
-    // kWh accumulation using the elapsed interval in hours
     pzemEnergy += pzemPower * (PZEM_INTERVAL / 3600000.0f);
-
-    Serial.print("PZEM Dummy -> V: ");
-    Serial.print(pzemVoltage, 1);
-    Serial.print(" V, I: ");
-    Serial.print(pzemCurrent, 2);
-    Serial.print(" A, P: ");
-    Serial.print(pzemPower, 1);
-    Serial.print(" W, E: ");
-    Serial.print(pzemEnergy, 3);
-    Serial.println(" kWh");
   }
 }
 
@@ -274,12 +225,6 @@ void updateDistanceReading() {
   if (millis() - lastDistanceRead >= DISTANCE_INTERVAL) {
     lastDistanceRead = millis();
     currentDistance = getDistance();
-
-    if (currentDistance <= 200) {
-      Serial.print("Distance: ");
-      Serial.print(currentDistance);
-      Serial.println(" cm");
-    }
   }
 }
 
@@ -378,17 +323,12 @@ void updateDoorReading() {
   int doorState = digitalRead(DOOR_SWITCH_PIN);
 
   if (doorState != lastDoorState) {
-    Serial.print("DOOR STATE: ");
-    Serial.println(doorState ? "CLOSED" : "OPEN");
-
     if (doorState == 0 && !doorAlertDone) {
-      Serial.println("DOOR OPEN ALERT");
       beep(300);
       doorAlertDone = true;
     }
 
     if (doorState == 1) {
-      Serial.println("DOOR CLOSED");
       doorAlertDone = false;
     }
 
@@ -404,7 +344,6 @@ void updatePIRReading() {
 
   if (pirState != lastPIRState) {
     if (pirState == 1) {
-      Serial.println("MOTION DETECTED");
       beep(120);
     }
     lastPIRState = pirState;
@@ -420,12 +359,7 @@ void updateHumanDetection() {
 
   if (humanDetected != lastHumanDetected) {
     if (humanDetected) {
-      Serial.print("HUMAN DETECTED - DIST: ");
-      Serial.print(currentDistance);
-      Serial.println(" cm");
       beep(200);
-    } else {
-      Serial.println("AREA CLEAR");
     }
     lastHumanDetected = humanDetected;
   }
@@ -435,14 +369,12 @@ void updateHumanDetection() {
     if (!relay2State) {
       relay2State = true;
       digitalWrite(RELAY_2_PIN, HIGH);
-      Serial.println("RELAY 2 ON (Human presence)");
     }
   }
 
   if (relay2State && (millis() - lastHumanTime > 5000)) {
     relay2State = false;
     digitalWrite(RELAY_2_PIN, LOW);
-    Serial.println("RELAY 2 OFF (No presence)");
   }
 }
 
@@ -459,14 +391,19 @@ void uploadLatestTelemetry() {
       payload.set("flowRate", flowRate);
       payload.set("totalLiters", totalLiters);
       payload.set("waterLevel", waterPercent);
-
       payload.set("gas", gasPpm);
-
       payload.set("doorState", lastDoorState);
       payload.set("motionDetected", lastPIRState);
       payload.set("humanPresent", lastHumanDetected);
-
       payload.set("distance", currentDistance);
+      payload.set("temperature", temperature);
+      payload.set("humidity", humidity);
+      payload.set("voltage", pzemVoltage);
+      payload.set("current", pzemCurrent);
+      payload.set("power", pzemPower);
+      payload.set("energy", pzemEnergy);
+      payload.set("updatedAt/.sv", "timestamp");
+
       if (currentDistance <= 50) {
         payload.set("proximityStatus", "CLOSE");
       } else if (currentDistance <= 100) {
@@ -476,9 +413,6 @@ void uploadLatestTelemetry() {
       } else {
         payload.set("proximityStatus", "OUT_OF_RANGE");
       }
-
-      payload.set("temperature", temperature);
-      payload.set("humidity", humidity);
 
       if (temperature < 18) {
         payload.set("temperatureStatus", "COLD");
@@ -500,25 +434,10 @@ void uploadLatestTelemetry() {
         payload.set("humidityStatus", "VERY_HUMID");
       }
 
-      payload.set("voltage", pzemVoltage);
-      payload.set("current", pzemCurrent);
-      payload.set("power", pzemPower);
-      payload.set("energy", pzemEnergy);
-
-      payload.set("updatedAt/.sv", "timestamp");
-
       bool success = Firebase.RTDB.updateNode(&fbdo, basePath + "/latest", &payload);
 
       if (success) {
-        Serial.println("Data uploaded to Firebase");
-        Serial.printf("  Temperature: %.1f C\n", temperature);
-        Serial.printf("  Humidity: %.1f %%\n", humidity);
-        Serial.printf("  Distance: %.1f cm\n", currentDistance);
-        Serial.printf("  PZEM: V=%.1f I=%.2f P=%.1f E=%.3f\n", pzemVoltage, pzemCurrent, pzemPower, pzemEnergy);
         firebaseBlinkPulse();
-      } else {
-        Serial.print("Firebase upload failed: ");
-        Serial.println(fbdo.errorReason());
       }
 
       if (flowRate > 0.0) {
@@ -531,18 +450,11 @@ void uploadLatestTelemetry() {
         history.set("humidity", humidity);
         history.set("createdAt/.sv", "timestamp");
 
-        bool ok = Firebase.RTDB.pushJSON(
-          &fbdo,
-          "properties/" + propertyId + "/history",
-          &history);
-
+        bool ok = Firebase.RTDB.pushJSON(&fbdo, "properties/" + propertyId + "/history", &history);
         if (ok) {
           pendingHistoryDeltaLiters = 0.0;
-          Serial.println("Flow history uploaded");
         }
       }
-    } else {
-      Serial.println("Firebase not ready");
     }
   }
 }
@@ -583,59 +495,34 @@ void setup() {
 
   pinMode(DHTPIN, INPUT_PULLUP);
   dht.begin();
-  Serial.println("DHT11 Sensor Started");
 
-  pzemVoltage = 230.0f;
-  targetPowerW = 15.0f;
-  pzemCurrent = targetPowerW / (pzemVoltage * 0.9f);
+  targetVoltageV = 216.0f;
+  targetPowerW = 4.41f;
+  pzemVoltage = targetVoltageV;
   pzemPower = targetPowerW;
+  pzemCurrent = pzemPower / pzemVoltage;
   pzemEnergy = 0.0f;
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting WiFi");
 
   unsigned long wifiStart = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - wifiStart < 20000) {
     wifiConnectingBlink();
-    Serial.print(".");
     delay(100);
   }
 
   wifiConnected = (WiFi.status() == WL_CONNECTED);
-  Serial.println(wifiConnected ? "\nWiFi Connected" : "\nWiFi Failed");
-
-  if (wifiConnected) {
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
-  }
 
   config.api_key = API_KEY;
   config.database_url = DATABASE_URL;
 
   if (Firebase.signUp(&config, &auth, "", "")) {
     signupOK = true;
-    Serial.println("Firebase Signup OK");
-  } else {
-    Serial.printf("Firebase Signup Failed: %s\n", config.signer.signupError.message.c_str());
   }
 
   config.token_status_callback = tokenStatusCallback;
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
-
-  Serial.println("\nSmart Hotel System Ready!");
-  Serial.println("=================================");
-  Serial.println("Monitoring:");
-  Serial.println("  - Water Flow Rate");
-  Serial.println("  - Water Level");
-  Serial.println("  - Gas Leakage");
-  Serial.println("  - Door Status");
-  Serial.println("  - Motion Detection");
-  Serial.println("  - Distance Measurement");
-  Serial.println("  - Human Presence");
-  Serial.println("  - Temperature & Humidity (DHT11)");
-  Serial.println("  - PZEM004T Dummy Data");
-  Serial.println("=================================\n");
 }
 
 // ======================
@@ -661,6 +548,5 @@ void loop() {
   }
 
   systemHeartbeat();
-
   delay(50);
 }
