@@ -135,6 +135,9 @@ float pzemEnergy = 0.0;
 unsigned long lastPzemRead = 0;
 const unsigned long PZEM_INTERVAL = 3000;
 
+// Simulated user load profile for a small LED-like AC load
+float loadProfileCurrent = 0.0;
+
 // ======================
 // DOOR/PIR STATE VARIABLES
 // ======================
@@ -237,12 +240,27 @@ void updatePzemDummyReading() {
   if (millis() - lastPzemRead >= PZEM_INTERVAL) {
     lastPzemRead = millis();
 
-    float waveA = (sin(millis() * 0.0012f) + 1.0f) * 0.5f;
-    float waveB = (sin(millis() * 0.0007f + 1.7f) + 1.0f) * 0.5f;
+    float minuteWave = (sin(millis() * 0.00008f) + 1.0f) * 0.5f;
+    float activityWave = (sin(millis() * 0.00031f + 2.2f) + 1.0f) * 0.5f;
 
-    pzemVoltage = 228.0f + (waveA * 8.0f);
-    pzemCurrent = 0.20f + (waveB * 2.30f);
-    pzemPower = pzemVoltage * pzemCurrent * 0.92f;
+    // Realistic mains voltage range for a 230V supply
+    pzemVoltage = 228.5f + (minuteWave * 5.0f);
+
+    // LED-style load: mostly low current, with gentle user-usage variation
+    if (activityWave < 0.45f) {
+      loadProfileCurrent = 0.02f + (activityWave * 0.06f);
+    } else if (activityWave < 0.80f) {
+      loadProfileCurrent = 0.05f + ((activityWave - 0.45f) * 0.20f);
+    } else {
+      loadProfileCurrent = 0.12f + ((activityWave - 0.80f) * 0.35f);
+    }
+
+    pzemCurrent = loadProfileCurrent;
+
+    // Small LED/driver loads usually have a decent power factor but not perfect
+    pzemPower = pzemVoltage * pzemCurrent * 0.85f;
+
+    // kWh accumulation using the elapsed interval in hours
     pzemEnergy += pzemPower * (PZEM_INTERVAL / 3600000.0f);
 
     Serial.print("PZEM Dummy -> V: ");
