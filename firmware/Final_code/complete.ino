@@ -562,11 +562,7 @@ void updateLogic() {
   relayLight = cmdLights;
   relayPump = cmdPump;
 
-  if (cmdMainRelay) {
-    relayPresence = cmdMotionEnable ? relay2State : true;
-  } else {
-    relayPresence = false;
-  }
+  relayPresence = cmdMotionEnable;
 
   applyRelays();
 }

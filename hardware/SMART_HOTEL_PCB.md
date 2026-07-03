@@ -3,7 +3,7 @@
 **Board:** ESP32 sensor/control carrier
 **MCU:** ESP32 DevKit V1 (30-pin)
 **PCB:** 2-layer, 100 mm × 100 mm, GND pour on bottom, 4 mounting holes
-**Companion firmware:** [`firmware/Final_code/Final_code.ino`](../firmware/Final_code/Final_code.ino)
+**Companion firmware:** [`firmware/Final_code/complete.ino`](../firmware/Final_code/complete.ino)
 
 > The importable schematic scaffold is [`easyeda_smart_hotel_schematic.json`](./easyeda_smart_hotel_schematic.json).
 > A JSON file cannot be "routed/DRC-clean" on its own — routing, copper pour and DRC are produced
@@ -190,6 +190,7 @@ needed: any two pins carrying the same net-label name are electrically connected
 
 ## 7. GPIO ↔ firmware cross-check
 
-Matches `Final_code.ino` exactly (flow 35, water 34, gas 32, door 33, PIR 27, ultra 18/19,
-DHT 4, relay-gas 26, relay-2 14, buzzer 25, ext-LED 23, int-LED 2). **PZEM (16/17) is on the
-PCB but not yet read in `Final_code.ino`** — add `PZEM004Tv30` on `Serial2` to use it.
+Matches `complete.ino` exactly (flow 35, water 34, gas 32, door 33, PIR 27, ultra 18/19,
+DHT 4, relay-fan 26, relay-presence 14, buzzer 25, ext-LED 23, int-LED 2). `complete.ino`
+also defines GPIO16/17 for PZEM wiring, but the current implementation still publishes dummy PZEM
+telemetry instead of reading `Serial2`.
