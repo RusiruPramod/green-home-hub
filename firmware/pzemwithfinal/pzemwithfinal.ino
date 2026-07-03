@@ -240,23 +240,13 @@ void updatePzemDummyReading() {
   if (millis() - lastPzemRead >= PZEM_INTERVAL) {
     lastPzemRead = millis();
 
-    // Very small voltage ripple (±2V around 230V nominal)
-    float voltageRipple = sin(millis() * 0.0003f) * 2.0f;
+    // Stable 230V with tiny ripple only (±0.5V)
+    float voltageRipple = sin(millis() * 0.0002f) * 0.5f;
     pzemVoltage = 230.0f + voltageRipple;
 
-    // User activity wave: creates realistic on/off and low/high usage patterns
-    float activityWave = (sin(millis() * 0.00025f + 1.5f) + 1.0f) * 0.5f;
-
-    // Power profile: 5W (idle) to 30W (peak use)
-    if (activityWave < 0.3f) {
-      targetPowerW = 5.0f + (activityWave * 10.0f);       // 5W to 8W: idle/standby
-    } else if (activityWave < 0.6f) {
-      targetPowerW = 8.0f + ((activityWave - 0.3f) * 30.0f); // 8W to 17W: normal use
-    } else if (activityWave < 0.9f) {
-      targetPowerW = 17.0f + ((activityWave - 0.6f) * 20.0f); // 17W to 23W: active use
-    } else {
-      targetPowerW = 23.0f + ((activityWave - 0.9f) * 70.0f); // 23W to 30W: peak use
-    }
+    // Very small variation wave: only ±1W around 5W baseline
+    float smallVariation = sin(millis() * 0.00015f) * 1.0f;
+    targetPowerW = 5.0f + smallVariation;  // 4W to 6W only
 
     // Calculate current from power (accounting for 0.9 power factor)
     pzemCurrent = targetPowerW / (pzemVoltage * 0.9f);
